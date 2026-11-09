@@ -9,7 +9,7 @@ Live at **https://l0n35.github.io/fin-vs-history-in-order/** once GitHub Pages i
 - **The History Of…** section collecting every "The History of …" series (Medicine, The World Cup, …).
 - **Not dated yet** section for new series that haven't been given dates.
 - **YouTube and Spotify links** straight to each episode, wherever it's been found.
-- **Bonus episodes**: the Patreon exclusives that also appear on Spotify, tagged *Bonus* and linked to Spotify and Patreon. Sequels, Film Clubs and same-week tie-ins are listed inside their main series, under *Bonus episodes*, and counted separately from it; the rest get cards of their own. They can all be hidden with the *Bonus episodes* switch.
+- **Bonus episodes**: the Patreon exclusives that also appear on Spotify, tagged *Bonus* and linked to Spotify and Patreon. Sequels, Film Clubs and same-week tie-ins are listed inside their main series, under *Bonus episodes*, and counted separately from it ("Watched 3 of 5 · 1 of 2 bonus", then "✓ Bonus" once they're all ticked); the rest get cards of their own. They can all be hidden with the *Bonus episodes* switch.
 - **Watched ticks** on every episode, plus a whole-series tick inside each expanded series. Saved in the browser (localStorage), no sign-in.
 
 Not affiliated with Fin Taylor, Horatio Gould or Podmasters.

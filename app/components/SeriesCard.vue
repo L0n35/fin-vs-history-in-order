@@ -35,6 +35,7 @@ const bonusGuids = computed<string[]>(() =>
 )
 const bonusTotal = computed(() => bonusGuids.value.length)
 const bonusDone = computed(() => countWatched(bonusGuids.value))
+const bonusAllDone = computed(() => bonusTotal.value > 0 && bonusDone.value === bonusTotal.value)
 
 const status = computed(() => {
   if (allDone.value) return 'Watched'
@@ -43,7 +44,8 @@ const status = computed(() => {
 })
 const bonusStatus = computed(() => {
   if (!bonusTotal.value) return ''
-  return bonusDone.value ? `${bonusDone.value} of ${bonusTotal.value} bonus` : `+${bonusTotal.value} bonus`
+  if (bonusAllDone.value) return 'Bonus'
+  return bonusDone.value ? `${bonusDone.value} of ${bonusTotal.value} bonus` : `${bonusTotal.value} bonus`
 })
 const bodyId = computed(() => `series-${props.series.id}`)
 
@@ -72,7 +74,7 @@ function onTickAll(event: Event) {
             </span>
             <template v-if="bonusStatus">
               <span class="sep" aria-hidden="true">·</span>
-              <span class="status-bonus" :class="{ started: bonusDone > 0 }">{{ bonusStatus }}</span>
+              <span class="status-bonus" :class="{ started: bonusDone > 0 }"><span v-if="bonusAllDone" class="status-tick" aria-hidden="true">✓</span>{{ bonusStatus }}<span v-if="bonusAllDone" class="sr-only"> watched</span></span>
             </template>
           </span>
           <span v-if="total > 1" class="progress" aria-hidden="true">

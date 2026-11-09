@@ -132,6 +132,7 @@ h1 { font-family: var(--f-display); font-variation-settings: "SOFT" 100, "opsz" 
 .status-line .sep { margin: 0 6px; }
 .status-bonus { color: var(--bonus); }
 .status-bonus.started { font-weight: 600; }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .progress { width: 72px; height: 5px; border-radius: 99px; background: var(--rule); overflow: hidden; }
 .progress > span { display: block; height: 100%; background: var(--good); border-radius: inherit; }
 .chevron { grid-area: chev; position: relative; width: 30px; height: 30px; border: 1.5px solid var(--rule); border-radius: 50%; }
