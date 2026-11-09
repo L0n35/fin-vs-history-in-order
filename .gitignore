@@ -14,3 +14,4 @@ dist
 data/episodes.json
 data/links.json
 data/unmatched.json
+data/bonus.json

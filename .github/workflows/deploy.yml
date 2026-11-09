@@ -107,6 +107,7 @@ jobs:
           } > "$dir/REPORT.md"
           mkdir -p "$dir/data" && cp data/*.json "$dir/data/" 2>/dev/null || true
           cp package-lock.json "$dir/" 2>/dev/null || true
+          if [ -d .output/public ]; then cp -r .output/public "$dir/site"; fi
           cd "$dir"
           git init -q -b status
           git add -A

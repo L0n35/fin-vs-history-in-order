@@ -3,10 +3,12 @@ import { ERAS, formatRange } from '~~/lib/format.mjs'
 
 const props = defineProps<{
   series: any[]
-  order: 'series' | 'strict'
   query: string
+  showBonus: boolean
   undatedCount: number
 }>()
+
+const { countWatched } = useWatched()
 
 const WIDTH = 1680
 const ROW = 32
@@ -66,23 +68,26 @@ function matches(e: any) {
 }
 
 type Item = {
-  key: string; sid: string; p: number | null; label: string; range: [number, number]; theme: boolean; tip: string
+  sid: string; label: string; range: [number, number]; theme: boolean; bonus: boolean; tip: string
   side?: 'in' | 'right' | 'left'; barW?: number; l?: number; r?: number; lane?: number
 }
 
 function itemsFor(theme: boolean): Item[] {
-  const list = props.series.filter((s) => s.theme === theme)
-  if (props.order === 'series') {
-    return list
-      .filter((s) => s.eps.some(matches))
-      .map((s) => ({ key: s.id, sid: s.id, p: null, label: s.name.replace(/[“”]/g, ''), range: s.range, theme, tip: `${s.name}, ${formatRange(s.range)}` }))
-  }
-  return list.flatMap((s) =>
-    s.eps.filter(matches).map((e: any) => ({
-      key: e.guid, sid: s.id, p: e.p, label: s.short + (e.p ? ` ${e.p}` : ''), range: e.range, theme,
-      tip: `${s.name}${e.p ? `, part ${e.p}` : ''}: ${formatRange(e.range)}`,
-    })),
-  )
+  return props.series
+    .filter((s) => s.range && s.theme === theme && (props.showBonus || !s.bonus) && s.eps.some(matches))
+    .map((s) => {
+      const guids = s.eps.map((e: any) => e.guid)
+      const watched = countWatched(guids) === guids.length
+      const name = s.name.replace(/[“”]/g, '')
+      return {
+        sid: s.id,
+        label: watched ? `✓ ${name}` : name,
+        range: s.range,
+        theme,
+        bonus: s.bonus,
+        tip: `${s.name}, ${formatRange(s.range)}${s.bonus ? ' (bonus)' : ''}${watched ? ', watched' : ''}`,
+      }
+    })
 }
 
 /** Greedy lane packing: each bar takes the first row that's free where it starts, like clashing events in a calendar. */
@@ -119,15 +124,8 @@ const groups = computed(() => {
   ]
 })
 
-const selected = ref<{ sid: string; p: number | null }>({
-  sid: props.series.find((s) => s.id === 'napoleonic-wars')?.id ?? props.series[0]?.id ?? '',
-  p: null,
-})
-const selectedSeries = computed(() => props.series.find((s) => s.id === selected.value.sid))
-const isSelected = (it: Item) => it.sid === selected.value.sid && (props.order === 'series' || it.p === selected.value.p)
-function select(it: Item) {
-  selected.value = { sid: it.sid, p: it.p }
-}
+const selected = ref<string>(props.series.find((s) => s.id === 'napoleonic-wars')?.id ?? props.series[0]?.id ?? '')
+const selectedSeries = computed(() => props.series.find((s) => s.id === selected.value))
 </script>
 
 <template>
@@ -153,14 +151,14 @@ function select(it: Item) {
           <div class="tl-lanes" :style="{ height: `${g.height}px` }">
             <button
               v-for="it in g.items"
-              :key="it.key"
+              :key="it.sid"
               type="button"
               class="tl-item"
-              :class="{ theme: it.theme }"
+              :class="{ theme: it.theme, bonus: it.bonus }"
               :style="{ left: `${it.l}px`, top: `${8 + it.lane! * ROW}px`, width: `${it.r! - it.l!}px` }"
-              :aria-pressed="String(isSelected(it))"
+              :aria-pressed="String(it.sid === selected)"
               :title="it.tip"
-              @click="select(it)"
+              @click="selected = it.sid"
             >
               <span v-if="it.side === 'left'" class="tl-lab">{{ it.label }}</span>
               <span class="tl-bar" :style="{ width: `${it.barW}px` }">{{ it.side === 'in' ? it.label : '' }}</span>
@@ -172,15 +170,11 @@ function select(it: Item) {
     </div>
     <p class="tl-hint">
       Scroll sideways to move through time. Tap a bar to see its episodes.
+      <template v-if="showBonus"> Outlined bars are bonus episodes.</template>
       <template v-if="undatedCount">{{ undatedCount }} {{ undatedCount === 1 ? 'episode isn’t' : 'episodes aren’t' }} dated yet, so {{ undatedCount === 1 ? 'it’s' : 'they’re' }} only in the list.</template>
     </p>
     <div class="tl-detail">
-      <SeriesCard
-        v-if="selectedSeries"
-        :series="selectedSeries"
-        :eps="selectedSeries.eps"
-        :highlight-part="order === 'strict' ? selected.p : null"
-      />
+      <SeriesCard v-if="selectedSeries" :key="selectedSeries.id" :series="selectedSeries" force-open />
     </div>
   </div>
 </template>

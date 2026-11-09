@@ -3,34 +3,49 @@ import { formatDate, formatRange } from '~~/lib/format.mjs'
 
 const props = defineProps<{
   ep: any
-  /** Strict order: show the series name, since neighbours can come from different series. */
-  strict?: boolean
-  highlight?: boolean
+  /** The series' own range; the episode's years are only shown when they differ. */
+  seriesRange?: [number, number] | null
 }>()
 
-const partLabel = computed(() => {
-  const { p, of } = props.ep
-  if (p == null) return props.ep.series && !props.ep.sub ? 'Single episode' : ''
-  return `Part ${p}${of ? ` of ${of}` : ''}`
+const { isWatched, setWatched } = useWatched()
+const watched = computed(() => isWatched(props.ep.guid))
+
+const years = computed(() => {
+  const r = props.ep.range
+  if (!r) return ''
+  const s = props.seriesRange
+  return s && s[0] === r[0] && s[1] === r[1] ? '' : formatRange(r)
 })
 const minutes = computed(() => (props.ep.duration ? Math.round(props.ep.duration / 60) : null))
 const platforms = computed(() =>
   [
     { key: 'youtube', label: 'YouTube', verb: 'Watch', url: props.ep.links?.youtube },
-    { key: 'spotify', label: 'Spotify', verb: 'Listen', url: props.ep.links?.spotify },
+    { key: 'spotify', label: 'Spotify', verb: 'Listen to', url: props.ep.links?.spotify },
+    { key: 'patreon', label: 'Patreon', verb: 'Find', url: props.ep.links?.patreon },
   ].filter((p) => p.url),
 )
+
+function onTick(event: Event) {
+  setWatched([props.ep.guid], (event.target as HTMLInputElement).checked)
+}
 </script>
 
 <template>
-  <li class="ep" :class="{ 'is-theme': ep.series?.theme, hl: highlight }">
-    <span class="yr">{{ ep.range ? formatRange(ep.range) : 'Undated' }}</span>
+  <li class="ep" :class="{ watched }">
+    <input
+      type="checkbox"
+      class="tick"
+      :checked="watched"
+      :aria-label="`Watched “${ep.joke}”`"
+      @change="onTick"
+    >
     <div class="ep-body">
-      <div class="kick">
-        <span v-if="strict && ep.series" class="chip">{{ ep.series.name }}</span>
-        <span v-if="partLabel" class="k">{{ partLabel }}</span>
+      <div v-if="ep.p != null || years || ep.sub || ep.bonus || ep.isNew" class="kick">
+        <span v-if="ep.p != null" class="k part">Part {{ ep.p }}</span>
+        <span v-if="years" class="k">{{ years }}</span>
         <span v-if="ep.sub" class="k">{{ ep.sub }}</span>
-        <span v-if="ep.isNew" class="badge">New</span>
+        <span v-if="ep.bonus" class="tag tag-bonus">Bonus</span>
+        <span v-if="ep.isNew" class="tag tag-new">New</span>
       </div>
       <div class="ep-title">{{ ep.joke }}</div>
       <p v-if="ep.blurb" class="blurb">{{ ep.blurb }}</p>

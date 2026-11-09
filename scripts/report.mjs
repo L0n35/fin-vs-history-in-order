@@ -2,12 +2,13 @@
 // The GitHub Action appends this to the run's summary page, so new series are easy to spot.
 import { readFile } from 'node:fs/promises'
 import { buildCatalogue } from '../lib/catalogue.mjs'
-import { SERIES } from '../lib/series.mjs'
+import { BONUS_SERIES, SERIES } from '../lib/series.mjs'
 
 const read = (name, fallback) => readFile(new URL(`../data/${name}`, import.meta.url), 'utf8').then(JSON.parse, () => fallback)
 const episodes = await read('episodes.json', [])
+const bonus = await read('bonus.json', [])
 const links = await read('links.json', {})
-const { stats, undated } = buildCatalogue(episodes, SERIES, Date.now(), links)
+const { stats, undated } = buildCatalogue([...episodes, ...bonus], SERIES, Date.now(), links, BONUS_SERIES)
 
 const onYouTube = episodes.filter((e) => links[e.guid]?.youtube).length
 const onSpotify = episodes.filter((e) => links[e.guid]?.spotify).length
@@ -17,6 +18,8 @@ const lines = [
   '## Fin vs History, in order',
   '',
   `**${stats.episodes}** episodes in the feed · **${stats.dated}** dated across **${stats.series}** series · **${stats.undated}** not dated yet`,
+  '',
+  `**${stats.bonus}** bonus episodes from Spotify in **${stats.bonusSeries}** series · **${stats.undatedBonus}** not dated yet`,
   '',
   `Links: **${onYouTube}** on YouTube · **${onSpotify}** on Spotify · **${noLink.length}** with neither`,
   '',
@@ -37,11 +40,11 @@ if (undated.length) {
   lines.push(
     '### Not dated yet',
     '',
-    'Add a series for each of these to `lib/series.mjs`:',
+    'Add a series for each of these to `lib/series.mjs` (bonus ones to `BONUS_SERIES`):',
     '',
-    '| Series in title | Episodes | Example title |',
-    '| --- | --- | --- |',
-    ...undated.map((g) => `| ${g.label.replace(/\|/g, '\\|')} | ${g.eps.length} | ${g.eps[0].title.replace(/\|/g, '\\|')} |`),
+    '| Series in title | Bonus? | Episodes | Example title |',
+    '| --- | --- | --- | --- |',
+    ...undated.map((g) => `| ${g.label.replace(/\|/g, '\\|')} | ${g.bonus ? 'Bonus' : ''} | ${g.eps.length} | ${g.eps[0].title.replace(/\|/g, '\\|')} |`),
     '',
     'Template:',
     '',

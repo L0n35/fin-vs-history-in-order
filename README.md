@@ -4,11 +4,13 @@ An unofficial fan site that lists every [Fin vs History](https://www.youtube.com
 
 Live at **https://l0n35.github.io/fin-vs-history-in-order/** once GitHub Pages is switched on (see [Setup](#setup)).
 
-- **List** view grouped into eras, with a toggle between keeping each series together and sorting every episode strictly by its own dates.
+- **List** view: series cards grouped into eras, collapsed by default, each showing how much of it you've watched.
 - **Timeline** view where overlapping series stack into rows, on an axis that gives recent centuries more room than prehistory.
 - **Across the ages** section for series like The History of Medicine that sweep through thousands of years.
 - **Not dated yet** section for new series that haven't been given dates.
 - **YouTube and Spotify links** straight to each episode, wherever it's been found.
+- **Bonus episodes**: the Patreon exclusives that also appear on Spotify, tagged *Bonus* and linked to Spotify and Patreon. They can be hidden with the *Bonus episodes* switch.
+- **Watched ticks** on every episode, plus a whole-series tick inside each expanded series. Saved in the browser (localStorage), no sign-in.
 
 Not affiliated with Fin Taylor, Horatio Gould or Podmasters.
 
@@ -48,6 +50,8 @@ Each run's summary page (Actions → latest run) lists the series that aren't da
 - `subjects` dates a series per person instead of per part, for series like the Post-War Prime Ministers where each episode names its subject after a colon in the joke title.
 - Use `\b` word boundaries for short names (`/\bSalem\b/`), or they'll match inside other words like "Jerusalem".
 - The first matching series wins, so put more specific rules first.
+
+Bonus episodes have their own list, `BONUS_SERIES`, at the bottom of the same file. Their rules are tested against the whole tidied title (e.g. `Film Club: Zulu vs Zulu Dawn`), and a `null` range files them under *Odds and ends*.
 
 Push to `main` and the site rebuilds.
 
@@ -98,7 +102,8 @@ After your first `npm install`, commit the generated `package-lock.json` so CI i
 | `lib/catalogue.mjs` | Matches episodes to series, parses part numbers, groups undated episodes. |
 | `lib/feed.mjs` | Dependency-free RSS parser. |
 | `lib/links.mjs` | Matches feed episodes to YouTube videos and Spotify episodes. |
+| `lib/bonus.mjs` | Picks the Patreon bonus episodes out of the Spotify list and tidies their titles. |
 | `lib/format.mjs` | Eras, BC/AD year formatting, sorting helpers. |
 | `scripts/` | Feed download, link matching and the run report used by CI. |
-| `app/` | The Nuxt app: `ListView`, `TimelineView`, `SeriesCard`, `EpisodeItem`. |
+| `app/` | The Nuxt app: `ListView`, `TimelineView`, `SeriesCard`, `EpisodeItem`, and `useWatched` for the ticks. |
 | `test/` | `node --test` suite with real feed items as fixtures. |

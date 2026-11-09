@@ -2,7 +2,7 @@
 //
 // Needs API credentials (as GitHub Actions secrets in CI, or in a local .env file):
 //   YOUTUBE_API_KEY                           YouTube Data API v3 key
-//   SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET  Spotify app credentials
+//   SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET  Spotify app credentials (also the source of the Patreon bonus episodes)
 // Optional: SPOTIFY_SHOW_ID, SPOTIFY_MARKET (default GB), YOUTUBE_HANDLE (default @FinvsHistory)
 //
 // A platform that isn't configured or fails is skipped with a warning. The build carries on
@@ -10,6 +10,7 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { isoDurationSeconds, matchLinks } from '../lib/links.mjs'
+import { extractBonus } from '../lib/bonus.mjs'
 
 try {
   process.loadEnvFile(fileURLToPath(new URL('../.env', import.meta.url)))
@@ -186,16 +187,25 @@ async function collect(name, key, configured, load) {
     const used = new Set(matched.values())
     unmatched[key] = candidates.filter((c) => !used.has(c.url)).map(({ text, ...rest }) => ({ ...rest, text: text?.slice(0, 200) }))
     console.log(`${name}: found ${candidates.length} episodes, matched ${matched.size} of ${episodes.length}.`)
+    return { candidates, used }
   } catch (err) {
     console.warn(`${name} links skipped: ${err instanceof Error ? err.message : err}`)
+    return null
   }
 }
 
 const { YOUTUBE_API_KEY, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } = process.env
 await collect('YouTube', 'youtube', !!YOUTUBE_API_KEY, () => youtubeVideos(YOUTUBE_API_KEY))
-await collect('Spotify', 'spotify', !!(SPOTIFY_CLIENT_ID && SPOTIFY_CLIENT_SECRET), () => spotifyEpisodes(SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET))
+const spotify = await collect('Spotify', 'spotify', !!(SPOTIFY_CLIENT_ID && SPOTIFY_CLIENT_SECRET), () =>
+  spotifyEpisodes(SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET),
+)
+
+// Patreon bonus episodes: on Spotify but not in the public feed.
+const bonus = spotify ? extractBonus(spotify.candidates, spotify.used) : []
+if (spotify) console.log(`Spotify: ${bonus.length} bonus (Patreon) episodes.`)
 
 await mkdir(DATA_DIR, { recursive: true })
 await writeFile(new URL('links.json', DATA_DIR), JSON.stringify(links, null, 2) + '\n')
+await writeFile(new URL('bonus.json', DATA_DIR), JSON.stringify(bonus, null, 2) + '\n')
 // Platform episodes that didn't match anything in the feed, for checking the matching and spotting gaps.
 await writeFile(new URL('unmatched.json', DATA_DIR), JSON.stringify(unmatched, null, 2) + '\n')
