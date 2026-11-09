@@ -5,7 +5,12 @@ const props = defineProps<{
   ep: any
   /** The series' own range; the episode's years are only shown when they differ. */
   seriesRange?: [number, number] | null
+  /** The card's title; an episode title that just repeats it isn't shown again. */
+  seriesName?: string
 }>()
+
+const squash = (s = '') => s.toLowerCase().replace(/^the\s+/, '').replace(/[^a-z0-9]/g, '')
+const showTitle = computed(() => !props.seriesName || squash(props.ep.joke) !== squash(props.seriesName))
 
 const { isWatched, setWatched } = useWatched()
 const watched = computed(() => isWatched(props.ep.guid))
@@ -40,14 +45,13 @@ function onTick(event: Event) {
       @change="onTick"
     >
     <div class="ep-body">
-      <div v-if="ep.p != null || years || ep.sub || ep.bonus || ep.isNew" class="kick">
+      <div v-if="ep.p != null || years || ep.sub || ep.isNew" class="kick">
         <span v-if="ep.p != null" class="k part">Part {{ ep.p }}</span>
         <span v-if="years" class="k">{{ years }}</span>
         <span v-if="ep.sub" class="k">{{ ep.sub }}</span>
-        <span v-if="ep.bonus" class="tag tag-bonus">Bonus</span>
         <span v-if="ep.isNew" class="tag tag-new">New</span>
       </div>
-      <div class="ep-title">{{ ep.joke }}</div>
+      <div v-if="showTitle" class="ep-title">{{ ep.joke }}</div>
       <p v-if="ep.blurb" class="blurb">{{ ep.blurb }}</p>
       <div class="meta">
         <span>Released {{ formatDate(ep.date) }}</span>

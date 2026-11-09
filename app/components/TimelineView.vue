@@ -96,7 +96,7 @@ function pack(items: Item[]) {
     const x1 = x(it.range[0])
     const x2 = x(it.range[1])
     const barW = Math.max(x2 - x1, 6)
-    const labelW = measure(it.label)
+    const labelW = measure(it.label) + 4 // a little slack for font rendering differences
     it.barW = barW
     if (barW >= labelW + 18) Object.assign(it, { side: 'in', l: x1, r: x1 + barW })
     else if (x1 + barW + 6 + labelW <= WIDTH - 8) Object.assign(it, { side: 'right', l: x1, r: x1 + barW + 6 + labelW })
@@ -105,7 +105,7 @@ function pack(items: Item[]) {
   items.sort((a, b) => a.l! - b.l! || a.r! - b.r!)
   const lanes: number[] = []
   for (const it of items) {
-    let k = lanes.findIndex((end) => end + 10 <= it.l!)
+    let k = lanes.findIndex((end) => end + 14 <= it.l!)
     if (k < 0) {
       k = lanes.length
       lanes.push(0)

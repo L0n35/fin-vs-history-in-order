@@ -70,7 +70,7 @@ function onTickAll(event: Event) {
         <span>I’ve watched the whole series</span>
       </label>
       <ol class="eps">
-        <EpisodeItem v-for="e in shown" :key="e.guid" :ep="e" :series-range="series.range" />
+        <EpisodeItem v-for="e in shown" :key="e.guid" :ep="e" :series-range="series.range" :series-name="series.name" />
       </ol>
     </div>
   </article>
