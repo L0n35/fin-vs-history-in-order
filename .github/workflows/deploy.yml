@@ -20,6 +20,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash # pipefail, so a failing command isn't hidden by `| tee`
     steps:
       - uses: actions/checkout@v4
 
@@ -28,7 +31,10 @@ jobs:
           node-version: 22
 
       - name: Install
-        run: (if [ -f package-lock.json ]; then npm ci; else npm install; fi) 2>&1 | tee install.log
+        # Retries once, since the npm registry occasionally 404s a version that was only just published.
+        run: |
+          install() { if [ -f package-lock.json ]; then npm ci; else npm install; fi; }
+          { install || { sleep 30; install; }; } 2>&1 | tee install.log
 
       - name: Test the data pipeline
         run: npm test 2>&1 | tee test.log
@@ -100,6 +106,7 @@ jobs:
             echo '```'
           } > "$dir/REPORT.md"
           mkdir -p "$dir/data" && cp data/*.json "$dir/data/" 2>/dev/null || true
+          cp package-lock.json "$dir/" 2>/dev/null || true
           cd "$dir"
           git init -q -b status
           git add -A
