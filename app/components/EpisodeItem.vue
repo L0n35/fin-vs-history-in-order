@@ -78,7 +78,7 @@ function onTick(event: Event) {
           target="_blank"
           rel="noopener noreferrer"
           :aria-label="`${pl.verb} “${ep.joke}” on ${pl.label}`"
-        >{{ pl.label }} <span aria-hidden="true">↗</span></a>
+        ><PlatformIcon v-if="pl.key !== 'patreon'" :name="pl.key" />{{ pl.label }} <span class="ext" aria-hidden="true">↗</span></a>
       </div>
     </div>
   </li>

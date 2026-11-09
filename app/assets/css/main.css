@@ -22,9 +22,9 @@
   --band: rgba(27, 33, 64, 0.045);
   --focus: #1B2140;
   --shadow: rgba(27, 33, 64, 0.28);
-  --youtube: #E1251B;
-  --spotify: #1AA34A;
-  --patreon: #F96854;
+  /* Brand icon colours: fixed by each brand's guidelines, not part of the palette */
+  --youtube-red: #FF0000;
+  --spotify-icon: #1ED760; /* Spotify green only on white or black; white on other dark backgrounds */
   --f-display: "Fraunces", "Cooper Black", Georgia, serif;
   --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -53,9 +53,7 @@
     --band: rgba(236, 234, 225, 0.045);
     --focus: #E9B444;
     --shadow: rgba(0, 0, 0, 0.55);
-    --youtube: #FF4E45;
-    --spotify: #1ED760;
-    --patreon: #FF7A68;
+    --spotify-icon: #FFFFFF;
     color-scheme: dark;
   }
 }
@@ -173,13 +171,17 @@ h1 { font-family: var(--f-display); font-variation-settings: "SOFT" 100, "opsz" 
 .tick:indeterminate::after { width: 11px; height: 0; border-left: 0; border-bottom: 2.5px solid var(--good); transform: none; }
 
 /* Listen links */
-.listen { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
-.listen-link { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; text-decoration: none; color: var(--ink); border: 1.5px solid var(--rule); border-radius: 999px; padding: 4px 11px; }
-.listen-link::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--dot); }
-.listen-link.youtube { --dot: var(--youtube); }
-.listen-link.spotify { --dot: var(--spotify); }
-.listen-link.patreon { --dot: var(--patreon); }
+.listen { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.listen-link { display: inline-flex; align-items: center; gap: 10px; min-height: 40px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--ink); background: var(--surface); border: 1.5px solid var(--rule); border-radius: 999px; padding: 0 14px 0 10px; }
+.listen-link.patreon { padding-left: 14px; }
+.listen-link .ext { margin-left: -6px; color: var(--muted); }
 .listen-link:hover { border-color: var(--ink); }
+/* Icons stay at their brands' minimum sizes and colours */
+.platform-icon { flex: none; display: block; }
+.platform-icon.youtube { width: 28px; height: 20px; }
+.platform-icon.youtube .yt-box { fill: var(--youtube-red); }
+.platform-icon.youtube .yt-play { fill: #FFFFFF; }
+.platform-icon.spotify { width: 21px; height: 21px; fill: var(--spotify-icon); }
 
 .empty { padding: 40px 0; color: var(--muted); }
 
