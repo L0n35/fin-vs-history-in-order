@@ -30,53 +30,90 @@ async function getJSON(url, init) {
   return res.json()
 }
 
-async function youtubeVideos(key) {
-  const api = 'https://www.googleapis.com/youtube/v3'
-  const handle = process.env.YOUTUBE_HANDLE || '@FinvsHistory'
-  const channel = await getJSON(`${api}/channels?part=snippet,contentDetails,statistics&forHandle=${encodeURIComponent(handle)}&key=${key}`)
-  const ch = channel.items?.[0]
-  const uploads = ch?.contentDetails?.relatedPlaylists?.uploads
-  if (!uploads) throw new Error(`no YouTube channel found for ${handle}`)
-  console.log(`YouTube channel: ${ch.snippet?.title} (${ch.id}), ${ch.statistics?.videoCount ?? '?'} public videos`)
+const YT_API = 'https://www.googleapis.com/youtube/v3'
 
-  const videos = []
-  const checked = []
+/** Every item in a playlist (uploads lists are playlists too). */
+async function playlistItems(playlistId, key, maxPages = 60) {
+  const items = []
   let pageToken = ''
-  for (let page = 0; page < 60; page++) {
+  for (let page = 0; page < maxPages; page++) {
     const list = await getJSON(
-      `${api}/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${uploads}&key=${key}${pageToken ? `&pageToken=${pageToken}` : ''}`,
+      `${YT_API}/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${playlistId}&key=${key}${pageToken ? `&pageToken=${pageToken}` : ''}`,
     )
-    const batch = (list.items || []).map((it) => ({
-      id: it.contentDetails.videoId,
-      title: it.snippet.title,
-      text: (it.snippet.description || '').slice(0, 600),
-      date: it.contentDetails.videoPublishedAt || it.snippet.publishedAt,
-    }))
-    if (batch.length) {
-      const details = await getJSON(`${api}/videos?part=contentDetails&id=${batch.map((v) => v.id).join(',')}&key=${key}`)
-      const lengths = new Map((details.items || []).map((v) => [v.id, isoDurationSeconds(v.contentDetails.duration)]))
-      for (const v of batch) {
-        checked.push({ title: v.title, secs: lengths.get(v.id) || 0 })
-        if ((lengths.get(v.id) || 0) >= MIN_EPISODE_SECONDS) {
-          videos.push({ url: `https://www.youtube.com/watch?v=${v.id}`, title: v.title, text: v.text, date: v.date })
-        }
-      }
+    for (const it of list.items || []) {
+      items.push({
+        id: it.contentDetails.videoId,
+        title: it.snippet.title,
+        text: (it.snippet.description || '').slice(0, 600),
+        date: it.contentDetails.videoPublishedAt || it.snippet.publishedAt,
+        owner: it.snippet.videoOwnerChannelId,
+        ownerName: it.snippet.videoOwnerChannelTitle,
+      })
     }
     pageToken = list.nextPageToken
     if (!pageToken) break
   }
+  return items
+}
 
-  // Diagnostics, so the build report shows what the channel actually contains.
-  console.log(`YouTube: checked ${checked.length} uploads, ${videos.length} at least ${MIN_EPISODE_SECONDS / 60} minutes long`)
-  const longest = [...checked].sort((a, b) => b.secs - a.secs).slice(0, 5)
-  if (longest.length) console.log(`Longest uploads:\n${longest.map((v) => `  ${Math.round(v.secs / 60)} min  ${v.title}`).join('\n')}`)
-  try {
-    const playlists = await getJSON(`${api}/playlists?part=snippet,contentDetails&channelId=${ch.id}&maxResults=50&key=${key}`)
-    const names = (playlists.items || []).map((p) => `  ${p.snippet.title} (${p.contentDetails.itemCount} items, ${p.id})`)
-    console.log(names.length ? `Playlists:\n${names.join('\n')}` : 'Playlists: none')
-  } catch (err) {
-    console.log(`Playlists: couldn't list (${err instanceof Error ? err.message : err})`)
+/** Video lengths in seconds, 50 at a time. */
+async function videoLengths(ids, key) {
+  const lengths = new Map()
+  for (let i = 0; i < ids.length; i += 50) {
+    const details = await getJSON(`${YT_API}/videos?part=contentDetails&id=${ids.slice(i, i + 50).join(',')}&key=${key}`)
+    for (const v of details.items || []) lengths.set(v.id, isoDurationSeconds(v.contentDetails.duration))
   }
+  return lengths
+}
+
+const looksLikeEpisode = (v) => v.title.includes('|') || /fin vs history|people who like history/i.test(v.text)
+
+/**
+ * The show's own channel mostly holds clips, with full episodes gathered into playlists.
+ * So: read the channel's uploads and every one of its playlists, then the uploads of whichever
+ * channels own the videos in those playlists, and keep anything long enough to be an episode.
+ */
+async function youtubeVideos(key) {
+  const handle = process.env.YOUTUBE_HANDLE || '@FinvsHistory'
+  const channel = await getJSON(`${YT_API}/channels?part=snippet,contentDetails&forHandle=${encodeURIComponent(handle)}&key=${key}`)
+  const ch = channel.items?.[0]
+  if (!ch) throw new Error(`no YouTube channel found for ${handle}`)
+
+  /** @type {Map<string, any>} */
+  const found = new Map()
+  const add = (items, trusted) => {
+    for (const v of items) if (v.id && !found.has(v.id)) found.set(v.id, { ...v, trusted })
+  }
+
+  add(await playlistItems(ch.contentDetails.relatedPlaylists.uploads, key), true)
+
+  const playlists = []
+  let pageToken = ''
+  for (let page = 0; page < 5; page++) {
+    const list = await getJSON(
+      `${YT_API}/playlists?part=snippet&channelId=${ch.id}&maxResults=50&key=${key}${pageToken ? `&pageToken=${pageToken}` : ''}`,
+    )
+    playlists.push(...(list.items || []).map((p) => p.id))
+    pageToken = list.nextPageToken
+    if (!pageToken) break
+  }
+  for (const id of playlists) add(await playlistItems(id, key, 10), true)
+
+  // Channels that own the playlisted videos. Their other uploads count only if they look like episodes.
+  const owners = new Map()
+  for (const v of found.values()) if (v.owner && v.owner !== ch.id) owners.set(v.owner, v.ownerName)
+  for (const [ownerId, ownerName] of owners) {
+    const before = found.size
+    add(await playlistItems(`UU${ownerId.slice(2)}`, key, 40), false)
+    console.log(`YouTube: also read ${found.size - before} uploads from ${ownerName} (${ownerId})`)
+  }
+
+  const lengths = await videoLengths([...found.keys()], key)
+  const videos = [...found.values()]
+    .filter((v) => (lengths.get(v.id) || 0) >= MIN_EPISODE_SECONDS && (v.trusted || looksLikeEpisode(v)))
+    .map((v) => ({ url: `https://www.youtube.com/watch?v=${v.id}`, title: v.title, text: v.text, date: v.date }))
+
+  console.log(`YouTube: ${ch.snippet?.title} has ${playlists.length} playlists; ${found.size} videos checked, ${videos.length} full-length episodes`)
   return videos
 }
 
