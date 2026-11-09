@@ -33,11 +33,14 @@ async function getJSON(url, init) {
 async function youtubeVideos(key) {
   const api = 'https://www.googleapis.com/youtube/v3'
   const handle = process.env.YOUTUBE_HANDLE || '@FinvsHistory'
-  const channel = await getJSON(`${api}/channels?part=contentDetails&forHandle=${encodeURIComponent(handle)}&key=${key}`)
-  const uploads = channel.items?.[0]?.contentDetails?.relatedPlaylists?.uploads
+  const channel = await getJSON(`${api}/channels?part=snippet,contentDetails,statistics&forHandle=${encodeURIComponent(handle)}&key=${key}`)
+  const ch = channel.items?.[0]
+  const uploads = ch?.contentDetails?.relatedPlaylists?.uploads
   if (!uploads) throw new Error(`no YouTube channel found for ${handle}`)
+  console.log(`YouTube channel: ${ch.snippet?.title} (${ch.id}), ${ch.statistics?.videoCount ?? '?'} public videos`)
 
   const videos = []
+  const checked = []
   let pageToken = ''
   for (let page = 0; page < 60; page++) {
     const list = await getJSON(
@@ -53,6 +56,7 @@ async function youtubeVideos(key) {
       const details = await getJSON(`${api}/videos?part=contentDetails&id=${batch.map((v) => v.id).join(',')}&key=${key}`)
       const lengths = new Map((details.items || []).map((v) => [v.id, isoDurationSeconds(v.contentDetails.duration)]))
       for (const v of batch) {
+        checked.push({ title: v.title, secs: lengths.get(v.id) || 0 })
         if ((lengths.get(v.id) || 0) >= MIN_EPISODE_SECONDS) {
           videos.push({ url: `https://www.youtube.com/watch?v=${v.id}`, title: v.title, text: v.text, date: v.date })
         }
@@ -60,6 +64,18 @@ async function youtubeVideos(key) {
     }
     pageToken = list.nextPageToken
     if (!pageToken) break
+  }
+
+  // Diagnostics, so the build report shows what the channel actually contains.
+  console.log(`YouTube: checked ${checked.length} uploads, ${videos.length} at least ${MIN_EPISODE_SECONDS / 60} minutes long`)
+  const longest = [...checked].sort((a, b) => b.secs - a.secs).slice(0, 5)
+  if (longest.length) console.log(`Longest uploads:\n${longest.map((v) => `  ${Math.round(v.secs / 60)} min  ${v.title}`).join('\n')}`)
+  try {
+    const playlists = await getJSON(`${api}/playlists?part=snippet,contentDetails&channelId=${ch.id}&maxResults=50&key=${key}`)
+    const names = (playlists.items || []).map((p) => `  ${p.snippet.title} (${p.contentDetails.itemCount} items, ${p.id})`)
+    console.log(names.length ? `Playlists:\n${names.join('\n')}` : 'Playlists: none')
+  } catch (err) {
+    console.log(`Playlists: couldn't list (${err instanceof Error ? err.message : err})`)
   }
   return videos
 }
