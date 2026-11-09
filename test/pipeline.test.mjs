@@ -39,6 +39,36 @@ test('reads part numbers from titles and descriptions', () => {
   assert.deepEqual(partOf('The Salem Witch Trials'), { p: null, of: null })
 })
 
+test('copes with the odd title formats in the real feed', () => {
+  // Missing closing bracket
+  assert.deepEqual(partOf('The Battle of Little Big Horn (Part 4/4'), { p: 4, of: 4 })
+  assert.equal(cleanLabel('The Battle of Little Big Horn (Part 4/4'), 'The Battle of Little Big Horn')
+  // Guest after the part number
+  assert.equal(cleanLabel('Nero & the Emperors of Rome (Part 2) with James McCann'), 'Nero & the Emperors of Rome')
+  // Part number and subject on the joke side
+  const pm = buildCatalogue(
+    [{ guid: 'pm1', title: 'Britain has a Cuck Dad and a Bitch Mum: Clement Attlee (Part 1) | Post War British Prime Ministers, 1945-1979', date: '2025-06-02T03:00:00Z', text: '' }],
+    [{ id: 'pms', name: 'Post-War British Prime Ministers', short: 'PMs', title: /Prime Ministers/i, range: [1945, 1979], parts: { 1: [1945, 1951] } }],
+  )
+  const e = pm.series[0].eps[0]
+  assert.equal(e.p, 1)
+  assert.equal(e.joke, 'Britain has a Cuck Dad and a Bitch Mum')
+  assert.equal(e.sub, 'Clement Attlee')
+  assert.deepEqual(e.range, [1945, 1951])
+})
+
+test('undated groups ignore capitalisation differences', () => {
+  const cat = buildCatalogue(
+    [
+      { guid: 'a', title: 'A | Richard III and The Princes in The Tower (Part 2)', date: '2025-06-05T03:00:00Z', text: '' },
+      { guid: 'b', title: 'B | Richard III and the Princes in the Tower (Part 1)', date: '2025-06-02T03:00:00Z', text: '' },
+    ],
+    [],
+  )
+  assert.equal(cat.undated.length, 1)
+  assert.deepEqual(cat.undated[0].eps.map((e) => e.p), [1, 2])
+})
+
 test('labels drop part numbers but keep the subtitle', () => {
   assert.equal(cleanLabel(splitTitle('Trust The Italians to Rediscover Porn | The Renaissance Part 1: Italy').seriesPart), 'The Renaissance: Italy')
   assert.equal(cleanLabel('Stalin: Barbarossa (Part 4)'), 'Stalin: Barbarossa')
