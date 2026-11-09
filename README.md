@@ -69,6 +69,10 @@ The first Spotify run logs the show's ID. Saving it as a repository **variable**
 
 Each run's summary shows how many episodes got each link and lists the ones that got neither.
 
+### Build reports
+
+Every run also writes its report, the link-matching log and the end of the build log to `REPORT.md` on the `status` branch. It's overwritten each run and contains no secrets, so you can check the latest build with `git fetch origin status && git show origin/status:REPORT.md`.
+
 ## Local development
 
 Needs Node 20.19 or newer.

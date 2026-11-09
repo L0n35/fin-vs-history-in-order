@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write # only used to save the build report to the `status` branch
   pages: write
   id-token: write
 
@@ -34,10 +34,10 @@ jobs:
         run: npm test
 
       - name: Fetch the latest episodes
-        run: npm run feed
+        run: npm run --silent feed 2>&1 | tee -a run.log
 
       - name: Find YouTube and Spotify links
-        run: npm run links
+        run: npm run --silent links 2>&1 | tee -a run.log
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
@@ -45,16 +45,58 @@ jobs:
           SPOTIFY_SHOW_ID: ${{ vars.SPOTIFY_SHOW_ID }}
 
       - name: Report undated episodes and missing links
-        run: npm run report >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          npm run --silent report > report.md
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build the site
-        run: npx nuxt generate
+        run: npx nuxt generate 2>&1 | tee build.log
         env:
           NUXT_APP_BASE_URL: /${{ github.event.repository.name }}/
 
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .output/public
+
+      # Saves this run's report (counts, link-matching log, and the end of the build log) to the
+      # `status` branch, so it can be read with plain git. Contains no secrets.
+      - name: Save the report to the status branch
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JOB_STATUS: ${{ job.status }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          dir="$(mktemp -d)"
+          {
+            echo "# Latest build"
+            echo
+            echo "- Result: **${JOB_STATUS}**"
+            echo "- Run: ${RUN_URL} (${{ github.event_name }})"
+            echo "- Commit: ${GITHUB_SHA::7}"
+            echo "- Finished: $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo
+            cat report.md 2>/dev/null || echo "_No report: the run stopped before the report step._"
+            echo
+            echo "## Feed and link log"
+            echo
+            echo '```'
+            cat run.log 2>/dev/null || echo "(empty)"
+            echo '```'
+            echo
+            echo "## End of the build log"
+            echo
+            echo '```'
+            tail -n 60 build.log 2>/dev/null || echo "(the build didn't run)"
+            echo '```'
+          } > "$dir/REPORT.md"
+          cd "$dir"
+          git init -q -b status
+          git add REPORT.md
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Build report for run ${{ github.run_id }} (${GITHUB_SHA::7})"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" status
 
   deploy:
     needs: build
