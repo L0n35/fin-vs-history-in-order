@@ -71,7 +71,9 @@ Episode links need API credentials, saved as repository secrets under **Settings
 | `YOUTUBE_API_KEY` | [Google Cloud console](https://console.cloud.google.com/apis/library/youtube.googleapis.com): create a project, enable **YouTube Data API v3**, then **Credentials → Create credentials → API key**. Restrict it to the YouTube Data API. A daily run uses well under 100 of the 10,000 free quota units. |
 | `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` | [Spotify developer dashboard](https://developer.spotify.com/dashboard): create an app with the **Web API** ticked. It asks for a redirect URI; `http://127.0.0.1:3000/callback` is fine since it's never used. Spotify requires the app owner to have Premium for development-mode apps. |
 
-The first Spotify run logs the show's ID. Saving it as a repository **variable** called `SPOTIFY_SHOW_ID` skips the search on later runs.
+The show's Spotify ID is built in; set a repository **variable** called `SPOTIFY_SHOW_ID` only if it ever changes.
+
+If a YouTube or Spotify lookup fails, the build keeps that platform's links (and the bonus episodes) from the last build and says so in the log, so a flaky API never wipes links off the site.
 
 Each run's summary shows how many episodes got each link and lists the ones that got neither.
 

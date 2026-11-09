@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { isoDurationSeconds, matchLinks, normalise, titleKeys } from '../lib/links.mjs'
+import { isoDurationSeconds, keepLastLinks, matchLinks, normalise, titleKeys } from '../lib/links.mjs'
 import { buildCatalogue } from '../lib/catalogue.mjs'
 import { SERIES } from '../lib/series.mjs'
 
@@ -93,4 +93,19 @@ test('the catalogue carries links through to each episode', () => {
     spotify: 'https://open.spotify.com/episode/y',
   })
   assert.deepEqual(stalin.eps.find((e) => e.guid === 'stalin-5').links, {})
+})
+
+test('keeps the last build’s links for a platform whose lookup failed', () => {
+  const links = { a: { youtube: 'yt-a-new' } }
+  const last = {
+    a: { youtube: 'yt-a-old', spotify: 'sp-a' },
+    b: { spotify: 'sp-b' },
+    gone: { spotify: 'sp-gone' }, // no longer in the feed
+  }
+  assert.equal(keepLastLinks(links, last, 'spotify', ['a', 'b']), 2)
+  assert.deepEqual(links, { a: { youtube: 'yt-a-new', spotify: 'sp-a' }, b: { spotify: 'sp-b' } })
+  // Never overwrites this run's links
+  assert.equal(keepLastLinks(links, last, 'youtube', ['a', 'b']), 0)
+  assert.equal(links.a.youtube, 'yt-a-new')
+  assert.equal(keepLastLinks(links, {}, 'spotify', ['a']), 0)
 })

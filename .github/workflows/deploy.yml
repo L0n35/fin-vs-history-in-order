@@ -42,6 +42,17 @@ jobs:
       - name: Fetch the latest episodes
         run: npm run --silent feed 2>&1 | tee -a run.log
 
+      # If a YouTube or Spotify lookup fails, the links step falls back to the last build's data.
+      - name: Restore the last build's links
+        run: |
+          mkdir -p data/last
+          if git fetch -q --depth 1 origin status; then
+            for f in links bonus; do
+              git show "FETCH_HEAD:data/$f.json" > "data/last/$f.json" 2>/dev/null || rm -f "data/last/$f.json"
+            done
+          fi
+          ls -l data/last
+
       - name: Find YouTube and Spotify links
         run: npm run --silent links 2>&1 | tee -a run.log
         env:

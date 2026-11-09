@@ -3,13 +3,15 @@
 // Needs API credentials (as GitHub Actions secrets in CI, or in a local .env file):
 //   YOUTUBE_API_KEY                           YouTube Data API v3 key
 //   SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET  Spotify app credentials (also the source of the Patreon bonus episodes)
-// Optional: SPOTIFY_SHOW_ID, SPOTIFY_MARKET (default GB), YOUTUBE_HANDLE (default @FinvsHistory)
+// Optional: SPOTIFY_SHOW_ID (default: the show's ID below), SPOTIFY_MARKET (default GB),
+//           YOUTUBE_HANDLE (default @FinvsHistory)
 //
-// A platform that isn't configured or fails is skipped with a warning. The build carries on
-// and those episodes just don't get that link.
+// A platform that isn't configured is skipped with a warning. One that fails keeps the last
+// good build's links (and, for Spotify, its bonus episodes) from data/last/, which CI restores
+// from the `status` branch, so a flaky API never wipes links off the site.
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
-import { isoDurationSeconds, matchLinks } from '../lib/links.mjs'
+import { isoDurationSeconds, keepLastLinks, matchLinks } from '../lib/links.mjs'
 import { extractBonus } from '../lib/bonus.mjs'
 
 try {
@@ -19,6 +21,10 @@ try {
 }
 
 const DATA_DIR = new URL('../data/', import.meta.url)
+const LAST_DIR = new URL('last/', DATA_DIR)
+// Fin vs History on Spotify: https://open.spotify.com/show/5LAKJjLEOLSybNdn6MnPwY
+const SPOTIFY_SHOW = '5LAKJjLEOLSybNdn6MnPwY'
+const readJSON = (url, fallback) => readFile(url, 'utf8').then(JSON.parse, () => fallback)
 const MIN_EPISODE_SECONDS = 20 * 60 // anything shorter on YouTube is a clip or a Short
 
 async function getJSON(url, init) {
@@ -131,13 +137,7 @@ async function spotifyEpisodes(clientId, clientSecret) {
   const api = 'https://api.spotify.com/v1'
   const market = process.env.SPOTIFY_MARKET || 'GB'
 
-  let show = process.env.SPOTIFY_SHOW_ID
-  if (!show) {
-    const search = await getJSON(`${api}/search?q=${encodeURIComponent('Fin vs History')}&type=show&market=${market}&limit=10`, auth)
-    show = (search.shows?.items || []).find((s) => s && s.name?.trim().toLowerCase() === 'fin vs history')?.id
-    if (!show) throw new Error('couldn’t find the show on Spotify. Set SPOTIFY_SHOW_ID')
-    console.log(`Spotify show ID is ${show}. Set SPOTIFY_SHOW_ID to skip the search.`)
-  }
+  const show = process.env.SPOTIFY_SHOW_ID || SPOTIFY_SHOW
 
   const episodes = []
   let limit = 50
@@ -170,8 +170,11 @@ async function spotifyEpisodes(clientId, clientSecret) {
   return episodes
 }
 
-const episodes = JSON.parse(await readFile(new URL('episodes.json', DATA_DIR), 'utf8').catch(() => '[]'))
+const episodes = await readJSON(new URL('episodes.json', DATA_DIR), [])
 const links = {}
+// The last good build's data, used when a lookup fails.
+const lastLinks = await readJSON(new URL('links.json', LAST_DIR), {})
+const lastBonus = await readJSON(new URL('bonus.json', LAST_DIR), [])
 
 const unmatched = {}
 
@@ -182,6 +185,7 @@ async function collect(name, key, configured, load) {
   }
   try {
     const candidates = await load()
+    if (!candidates.length) throw new Error('no episodes came back')
     const matched = matchLinks(episodes, candidates)
     for (const [guid, url] of matched) (links[guid] ||= {})[key] = url
     const used = new Set(matched.values())
@@ -189,8 +193,9 @@ async function collect(name, key, configured, load) {
     console.log(`${name}: found ${candidates.length} episodes, matched ${matched.size} of ${episodes.length}.`)
     return { candidates, used }
   } catch (err) {
-    console.warn(`${name} links skipped: ${err instanceof Error ? err.message : err}`)
-    return null
+    const kept = keepLastLinks(links, lastLinks, key, episodes.map((e) => e.guid))
+    console.warn(`${name} lookup failed (${err instanceof Error ? err.message : err}). Kept ${kept} links from the last good build.`)
+    return { failed: true }
   }
 }
 
@@ -201,8 +206,14 @@ const spotify = await collect('Spotify', 'spotify', !!(SPOTIFY_CLIENT_ID && SPOT
 )
 
 // Patreon bonus episodes: on Spotify but not in the public feed.
-const bonus = spotify ? extractBonus(spotify.candidates, spotify.used) : []
-if (spotify) console.log(`Spotify: ${bonus.length} bonus (Patreon) episodes.`)
+let bonus = []
+if (spotify?.failed) {
+  bonus = lastBonus
+  console.warn(`Spotify: kept ${bonus.length} bonus (Patreon) episodes from the last good build.`)
+} else if (spotify) {
+  bonus = extractBonus(spotify.candidates, spotify.used)
+  console.log(`Spotify: ${bonus.length} bonus (Patreon) episodes.`)
+}
 
 await mkdir(DATA_DIR, { recursive: true })
 await writeFile(new URL('links.json', DATA_DIR), JSON.stringify(links, null, 2) + '\n')
