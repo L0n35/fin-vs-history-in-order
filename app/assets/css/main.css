@@ -172,12 +172,11 @@ h1 { font-family: var(--f-display); font-variation-settings: "SOFT" 100, "opsz" 
 /* Listen links */
 .listen { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .listen-link { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--ink); background: var(--surface); border: 1.5px solid var(--rule); border-radius: 999px; padding: 0 14px 0 10px; }
-.listen-link.patreon { padding-left: 14px; }
 .listen-link .ext { margin-left: -4px; color: var(--muted); }
 .listen-link:hover { border-color: var(--ink); }
 .platform-icon { flex: none; display: block; fill: var(--platform-icon); }
 .platform-icon.youtube { width: 22.4px; height: 16px; }
-.platform-icon.spotify { width: 16.8px; height: 16.8px; }
+.platform-icon.spotify, .platform-icon.patreon { width: 16.8px; height: 16.8px; }
 
 .empty { padding: 40px 0; color: var(--muted); }
 

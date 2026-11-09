@@ -31,9 +31,9 @@ const years = computed(() => {
 const minutes = computed(() => (props.ep.duration ? Math.round(props.ep.duration / 60) : null))
 const platforms = computed(() =>
   [
-    { key: 'youtube', label: 'YouTube', verb: 'Watch', url: props.ep.links?.youtube },
-    { key: 'spotify', label: 'Spotify', verb: 'Listen to', url: props.ep.links?.spotify },
-    { key: 'patreon', label: 'Patreon', verb: 'Find', url: props.ep.links?.patreon },
+    { key: 'youtube' as const, label: 'YouTube', verb: 'Watch', url: props.ep.links?.youtube },
+    { key: 'spotify' as const, label: 'Spotify', verb: 'Listen to', url: props.ep.links?.spotify },
+    { key: 'patreon' as const, label: 'Patreon', verb: 'Find', url: props.ep.links?.patreon },
   ].filter((p) => p.url),
 )
 
@@ -78,7 +78,7 @@ function onTick(event: Event) {
           target="_blank"
           rel="noopener noreferrer"
           :aria-label="`${pl.verb} “${ep.joke}” on ${pl.label}`"
-        ><PlatformIcon v-if="pl.key !== 'patreon'" :name="pl.key" />{{ pl.label }} <span class="ext" aria-hidden="true">↗</span></a>
+        ><PlatformIcon :name="pl.key" />{{ pl.label }} <span class="ext" aria-hidden="true">↗</span></a>
       </div>
     </div>
   </li>
