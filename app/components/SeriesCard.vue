@@ -7,6 +7,8 @@ const props = defineProps<{
   eps?: any[]
   /** Keep the card open, e.g. while searching or in the timeline's detail panel. */
   forceOpen?: boolean
+  /** Shown instead of the series name, e.g. "Medicine" under the "The History Of…" heading. */
+  title?: string
 }>()
 
 const { countWatched, setWatched } = useWatched()
@@ -42,11 +44,10 @@ function onTickAll(event: Event) {
         :aria-controls="bodyId"
         @click="expanded = !isOpen"
       >
-        <span class="series-years">{{ series.range ? formatRange(series.range) : 'No single period' }}</span>
-        <span class="series-name">{{ series.name }}</span>
+        <span class="series-years">{{ series.range ? formatRange(series.range) : series.undated ? 'New' : 'Various' }}</span>
+        <span class="series-name">{{ title || series.name }}</span>
         <span class="series-foot">
           <span v-if="series.bonus" class="tag tag-bonus">Bonus</span>
-          <span v-if="series.theme" class="tag tag-theme">Across the ages</span>
           <span class="series-status" :class="{ started: done > 0 }">
             <span v-if="allDone" class="status-tick" aria-hidden="true">✓</span>{{ status }}
           </span>

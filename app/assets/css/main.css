@@ -72,10 +72,8 @@ a { color: inherit; text-underline-offset: 2px; }
 
 /* Hero */
 .hero { background: var(--hero); color: var(--hero-ink); border-bottom: 6px solid var(--hero-ink); }
-.hero .wrap { padding-block: 40px 30px; }
-.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .09em; text-transform: uppercase; margin: 0; }
-h1 { font-family: var(--f-display); font-variation-settings: "SOFT" 100, "opsz" 144; font-weight: 900; font-size: clamp(2.5rem, 9vw, 4.4rem); line-height: .96; letter-spacing: -.015em; margin: .22em 0 .32em; text-wrap: balance; }
-.lede { font-size: 1.0625rem; max-width: 32em; margin: 0; }
+.hero .wrap { padding-block: 36px 26px; }
+h1 { font-family: var(--f-display); font-variation-settings: "SOFT" 100, "opsz" 144; font-weight: 900; font-size: clamp(2.5rem, 9vw, 4.4rem); line-height: .96; letter-spacing: -.015em; margin: 0; text-wrap: balance; }
 .stats { font-family: var(--f-mono); font-size: 12.5px; margin: 18px 0 0; font-variant-numeric: tabular-nums; }
 
 /* Controls */
@@ -88,20 +86,17 @@ h1 { font-family: var(--f-display); font-variation-settings: "SOFT" 100, "opsz" 
 .search { flex: 1 1 220px; }
 .search input { width: 100%; font: 15px var(--f-body); padding: 9px 14px; border: 1.5px solid var(--rule); border-radius: 999px; background: var(--surface); color: var(--ink); }
 .search input::placeholder { color: var(--muted); }
-.explain { color: var(--muted); font-size: 13.5px; margin: 10px 0 0; max-width: 40em; }
 
 /* Eras */
 .era { margin-top: 38px; }
 .era-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; border-bottom: 2px solid var(--ink); padding-bottom: 6px; }
 .era-head h2 { font-family: var(--f-display); font-variation-settings: "SOFT" 100, "opsz" 72; font-weight: 800; font-size: 1.6rem; line-height: 1.15; margin: 0; text-wrap: balance; }
 .era-years { font-family: var(--f-mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
-.era-note { color: var(--muted); font-size: 14px; margin: 10px 0 0; max-width: 40em; }
 .cards { display: grid; gap: 10px; margin-top: 14px; }
 
 /* Tags */
 .tag { display: inline-block; font: 600 10.5px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; border-radius: 4px; padding: 4px 6px; white-space: nowrap; }
 .tag-bonus { background: var(--bonus); color: var(--bonus-ink); }
-.tag-theme { background: var(--thematic-soft); color: var(--thematic); }
 .tag-new { background: var(--ink); color: var(--paper); }
 
 /* Series cards: one card per series, collapsed by default */
@@ -211,8 +206,8 @@ h1 { font-family: var(--f-display); font-variation-settings: "SOFT" 100, "opsz" 
 .tl-detail { margin-top: 12px; }
 
 footer { margin-top: 56px; border-top: 1px solid var(--rule); }
-footer .wrap { padding-block: 22px 40px; color: var(--muted); font-size: 13px; }
-footer p { margin: 0 0 6px; max-width: 44em; }
+footer .wrap { padding-block: 20px 36px; color: var(--muted); font-size: 13px; }
+footer p { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
 
 @media (prefers-reduced-motion: no-preference) {
   .seg button, .tl-bar, .tick, .progress > span { transition: background-color .15s ease, color .15s ease, box-shadow .15s ease, width .2s ease; }

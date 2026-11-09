@@ -45,11 +45,17 @@ const oddsAndEnds = computed(() => cards.value.filter((c) => !c.s.range))
 const undatedCards = computed<Card[]>(() =>
   props.undated
     .filter((g) => props.showBonus || !g.bonus)
-    .map((g, i) => ({ s: { id: `undated-${i}`, name: g.label, range: null, bonus: g.bonus, eps: g.eps }, eps: g.eps.filter(matches) }))
+    .map((g, i) => ({ s: { id: `undated-${i}`, name: g.label, range: null, undated: true, bonus: g.bonus, eps: g.eps }, eps: g.eps.filter(matches) }))
     .filter((c) => c.eps.length),
 )
 
 const searching = computed(() => !!needle.value)
+
+/** "The History of The World Cup" → "The World Cup", under a "The History Of…" heading. */
+function historyOfTitle(name: string) {
+  const rest = name.replace(/^the history of\s+/i, '')
+  return rest.charAt(0).toUpperCase() + rest.slice(1)
+}
 const isEmpty = computed(() => !cards.value.length && !undatedCards.value.length)
 </script>
 
@@ -67,15 +73,18 @@ const isEmpty = computed(() => !cards.value.length && !undatedCards.value.length
 
     <section v-if="thematic.length" class="era">
       <header class="era-head">
-        <h2>Across the ages</h2>
-        <span class="era-years">Thematic series</span>
+        <h2>The History Of…</h2>
+        <span class="era-years">{{ thematic.length }} series</span>
       </header>
-      <p class="era-note">
-        These sweep through thousands of years. Pinning them to a start date would put a story about modern medicine
-        next to the Neanderthals, so they sit here instead.
-      </p>
       <div class="cards">
-        <SeriesCard v-for="c in thematic" :key="c.s.id" :series="c.s" :eps="c.eps" :force-open="searching" />
+        <SeriesCard
+          v-for="c in thematic"
+          :key="c.s.id"
+          :series="c.s"
+          :eps="c.eps"
+          :title="historyOfTitle(c.s.name)"
+          :force-open="searching"
+        />
       </div>
     </section>
 
@@ -84,7 +93,6 @@ const isEmpty = computed(() => !cards.value.length && !undatedCards.value.length
         <h2>Odds and ends</h2>
         <span class="era-years">Bonus</span>
       </header>
-      <p class="era-note">Supercuts and specials that aren’t about one period.</p>
       <div class="cards">
         <SeriesCard v-for="c in oddsAndEnds" :key="c.s.id" :series="c.s" :eps="c.eps" :force-open="searching" />
       </div>
@@ -92,15 +100,14 @@ const isEmpty = computed(() => !cards.value.length && !undatedCards.value.length
 
     <section v-if="undatedCards.length" class="era undated">
       <header class="era-head">
-        <h2>Not dated yet</h2>
-        <span class="era-years">Newest first</span>
+        <h2>Just out</h2>
+        <span class="era-years">Dates to follow</span>
       </header>
-      <p class="era-note">These are new and their series doesn’t have dates yet. They’ll move into place once it does.</p>
       <div class="cards">
         <SeriesCard v-for="c in undatedCards" :key="c.s.id" :series="c.s" :eps="c.eps" :force-open="searching" />
       </div>
     </section>
 
-    <p v-if="isEmpty" class="empty">No episodes match “{{ query }}”. Try a person, a war or a word from a title.</p>
+    <p v-if="isEmpty" class="empty">Nothing on “{{ query }}”. Charlie’s looking into it.</p>
   </div>
 </template>

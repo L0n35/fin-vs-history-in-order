@@ -5,7 +5,6 @@ const props = defineProps<{
   series: any[]
   query: string
   showBonus: boolean
-  undatedCount: number
 }>()
 
 const { countWatched } = useWatched()
@@ -120,7 +119,7 @@ const groups = computed(() => {
   void fontsLoaded.value
   return [
     { key: 'main', label: '', ...pack(itemsFor(false)) },
-    { key: 'themes', label: 'Across the ages', ...pack(itemsFor(true)) },
+    { key: 'themes', label: 'The History Of…', ...pack(itemsFor(true)) },
   ]
 })
 
@@ -168,11 +167,7 @@ const selectedSeries = computed(() => props.series.find((s) => s.id === selected
         </template>
       </div>
     </div>
-    <p class="tl-hint">
-      Scroll sideways to move through time. Tap a bar to see its episodes.
-      <template v-if="showBonus"> Outlined bars are bonus episodes.</template>
-      <template v-if="undatedCount">{{ undatedCount }} {{ undatedCount === 1 ? 'episode isn’t' : 'episodes aren’t' }} dated yet, so {{ undatedCount === 1 ? 'it’s' : 'they’re' }} only in the list.</template>
-    </p>
+    <p class="tl-hint">Scroll sideways · tap a bar to open it<template v-if="showBonus"> · dashed bars are bonus</template></p>
     <div class="tl-detail">
       <SeriesCard v-if="selectedSeries" :key="selectedSeries.id" :series="selectedSeries" force-open />
     </div>

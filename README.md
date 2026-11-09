@@ -6,7 +6,7 @@ Live at **https://l0n35.github.io/fin-vs-history-in-order/** once GitHub Pages i
 
 - **List** view: series cards grouped into eras, collapsed by default, each showing how much of it you've watched.
 - **Timeline** view where overlapping series stack into rows, on an axis that gives recent centuries more room than prehistory.
-- **Across the ages** section for series like The History of Medicine that sweep through thousands of years.
+- **The History Of…** section collecting every "The History of …" series (Medicine, The World Cup, …).
 - **Not dated yet** section for new series that haven't been given dates.
 - **YouTube and Spotify links** straight to each episode, wherever it's been found.
 - **Bonus episodes**: the Patreon exclusives that also appear on Spotify, tagged *Bonus* and linked to Spotify and Patreon. They can be hidden with the *Bonus episodes* switch.
@@ -46,7 +46,7 @@ Each run's summary page (Actions → latest run) lists the series that aren't da
 
 - `title` only looks at the part after the `|`, so jokes in the episode title can't cause false matches.
 - `text` (optional) is tested against the description, for episodes whose title doesn't name the series. Example: `/Napoleonic Wars \(Part/i` catches "The Battle of Trafalgar".
-- `theme: true` puts a series in **Across the ages** instead of pinning it to a start date.
+- Series named "The History of …" go in the **The History Of…** section automatically.
 - `subjects` dates a series per person instead of per part, for series like the Post-War Prime Ministers where each episode names its subject after a colon in the joke title.
 - Use `\b` word boundaries for short names (`/\bSalem\b/`), or they'll match inside other words like "Jerusalem".
 - The first matching series wins, so put more specific rules first.
