@@ -111,7 +111,7 @@ async function youtubeVideos(key) {
   const lengths = await videoLengths([...found.keys()], key)
   const videos = [...found.values()]
     .filter((v) => (lengths.get(v.id) || 0) >= MIN_EPISODE_SECONDS && (v.trusted || looksLikeEpisode(v)))
-    .map((v) => ({ url: `https://www.youtube.com/watch?v=${v.id}`, title: v.title, text: v.text, date: v.date }))
+    .map((v) => ({ url: `https://www.youtube.com/watch?v=${v.id}`, title: v.title, text: v.text, date: v.date, duration: lengths.get(v.id) }))
 
   console.log(`YouTube: ${ch.snippet?.title} has ${playlists.length} playlists; ${found.size} videos checked, ${videos.length} full-length episodes`)
   return videos

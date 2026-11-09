@@ -45,6 +45,8 @@ Each run's summary page (Actions → latest run) lists the series that aren't da
 - `title` only looks at the part after the `|`, so jokes in the episode title can't cause false matches.
 - `text` (optional) is tested against the description, for episodes whose title doesn't name the series. Example: `/Napoleonic Wars \(Part/i` catches "The Battle of Trafalgar".
 - `theme: true` puts a series in **Across the ages** instead of pinning it to a start date.
+- `subjects` dates a series per person instead of per part, for series like the Post-War Prime Ministers where each episode names its subject after a colon in the joke title.
+- Use `\b` word boundaries for short names (`/\bSalem\b/`), or they'll match inside other words like "Jerusalem".
 - The first matching series wins, so put more specific rules first.
 
 Push to `main` and the site rebuilds.

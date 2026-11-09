@@ -10,7 +10,7 @@ const props = defineProps<{
 
 const partLabel = computed(() => {
   const { p, of } = props.ep
-  if (p == null) return props.ep.series ? 'Single episode' : ''
+  if (p == null) return props.ep.series && !props.ep.sub ? 'Single episode' : ''
   return `Part ${p}${of ? ` of ${of}` : ''}`
 })
 const minutes = computed(() => (props.ep.duration ? Math.round(props.ep.duration / 60) : null))

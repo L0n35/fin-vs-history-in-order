@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { parseFeed } from '../lib/feed.mjs'
-import { buildCatalogue, partOf, splitTitle, cleanLabel } from '../lib/catalogue.mjs'
+import { buildCatalogue, partOf, splitTitle, cleanLabel, findSeries } from '../lib/catalogue.mjs'
 import { SERIES } from '../lib/series.mjs'
 import { formatRange, eraIndex, ERAS, PRESENT } from '../lib/format.mjs'
 
@@ -129,6 +129,12 @@ test('formats years and eras', () => {
   assert.equal(ERAS[eraIndex([1491, 1547])].name, 'Early modern')
   assert.equal(ERAS[eraIndex([1776, 1920])].name, 'Early modern')
   assert.equal(ERAS[eraIndex([1980, 1982])].name, 'Post-war')
+})
+
+test('rules don’t catch words inside other words', () => {
+  // "Salem" is inside "Jerusalem"
+  const ep = { title: 'Justice for Naughty Francis Bourgeois | The Eichmann Trial: Jerusalem, 1961 (Part 4/4)', text: '' }
+  assert.equal(findSeries(ep, SERIES).id, 'eichmann')
 })
 
 test('every series rule is well formed', () => {

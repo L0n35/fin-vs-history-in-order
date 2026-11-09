@@ -60,6 +60,16 @@ test('falls back to the release date only when it is unambiguous', () => {
   assert.equal(clear.get('salem'), 'https://www.youtube.com/watch?v=f')
 })
 
+test('a long supercut released the same day doesn’t block the date fallback', () => {
+  const wilson = [ep('wilson-2', '“Stop Pegging Grandad!”: Harold Wilson (Part 2) | Post War British Prime Ministers, 1945-1979', '2025-09-29T03:00:00Z')]
+  wilson[0].duration = 3300
+  const m = matchLinks(wilson, [
+    { ...vid('w', 'The Prime Minister Who Got Abused By His Secretary', '2025-09-29T16:00:00Z'), duration: 3350 },
+    { ...vid('s', 'The Nazi Supercut | The Best of Fin vs History', '2025-09-29T18:00:00Z'), duration: 10860 },
+  ])
+  assert.equal(m.get('wilson-2'), 'https://www.youtube.com/watch?v=w')
+})
+
 test('each video is used for one episode at most', () => {
   const m = matchLinks(episodes, [vid('g', 'Hitler’s Jet Fuel Melts Stalin’s Beams | Stalin: Barbarossa (Part 4)', '2026-10-29T03:00:00Z')])
   assert.equal(m.size, 1)
