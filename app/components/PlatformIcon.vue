@@ -1,10 +1,7 @@
 <script setup lang="ts">
-// Official YouTube and Spotify icons (shapes from Simple Icons, CC0), unaltered and in the
-// colours each brand allows, used only on links to that platform's content:
-// - YouTube: red icon with a white triangle, at least 20px tall
-//   (developers.google.com/youtube/branding and the YouTube brand resources).
-// - Spotify: green on white, white on dark backgrounds, at least 21px
-//   (developer.spotify.com/documentation/design).
+// Official YouTube and Spotify icons (shapes from Simple Icons, CC0), unaltered, in their
+// one-colour versions: almost black on light backgrounds, white on dark ones. Used only on
+// links to that platform's content. Sizes are in main.css (.platform-icon).
 // Patreon's brand terms only cover creators, so Patreon links have no icon.
 defineProps<{ name: 'youtube' | 'spotify' }>()
 </script>
@@ -14,14 +11,12 @@ defineProps<{ name: 'youtube' | 'spotify' }>()
     v-if="name === 'youtube'"
     class="platform-icon youtube"
     viewBox="0 3.545 24 16.91"
-    width="28"
-    height="20"
+    width="22.4"
+    height="16"
     aria-hidden="true"
     focusable="false"
   >
-    <path class="yt-play" d="M9.545 15.568V8.432L15.818 12z" />
     <path
-      class="yt-box"
       d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"
     />
   </svg>
@@ -29,8 +24,8 @@ defineProps<{ name: 'youtube' | 'spotify' }>()
     v-else
     class="platform-icon spotify"
     viewBox="0 0 24 24"
-    width="21"
-    height="21"
+    width="16.8"
+    height="16.8"
     aria-hidden="true"
     focusable="false"
   >
