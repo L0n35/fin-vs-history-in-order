@@ -1,5 +1,7 @@
 // On GitHub Pages the site lives under /<repo-name>/; the workflow sets NUXT_APP_BASE_URL for that.
 const baseURL = process.env.NUXT_APP_BASE_URL || '/'
+// The commit this build came from, so the workflow can confirm the live site has updated.
+const build = (process.env.GITHUB_SHA || 'local').slice(0, 7)
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
@@ -21,6 +23,7 @@ export default defineNuxtConfig({
       meta: [
         { name: 'description', content: 'An unofficial fan guide that sorts every Fin vs History episode by when the history happened, not when it came out.' },
         { name: 'theme-color', content: '#E2A52A' },
+        { name: 'build', content: build },
         { property: 'og:title', content: 'Fin vs History, in order' },
         { property: 'og:description', content: 'Every series sorted by when it happened, instead of when it came out.' },
       ],

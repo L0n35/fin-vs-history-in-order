@@ -121,6 +121,48 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # Checks the live site is serving this commit (each page carries it in <meta name="build">)
+  # and records the result as DEPLOY.md on the `status` branch.
+  confirm-live:
+    needs: deploy
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the live site and record the result
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+          PAGE_URL: ${{ needs.deploy.outputs.page_url }}
+        run: |
+          short="${GITHUB_SHA::7}"
+          live="not checked"
+          if [ "$DEPLOY_RESULT" = "success" ] && [ -n "$PAGE_URL" ]; then
+            live="no: the page didn't show build ${short} within 3 minutes"
+            for i in $(seq 1 18); do
+              if curl -fsSL -H 'Cache-Control: no-cache' "${PAGE_URL}?check=${short}-${i}" | grep -q "content=\"${short}\""; then
+                live="yes"
+                break
+              fi
+              sleep 10
+            done
+          fi
+          git clone -q --depth 1 --branch status "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" status
+          cd status
+          {
+            echo "# Latest deploy"
+            echo
+            echo "- Deploy: **${DEPLOY_RESULT}**"
+            echo "- Live site serving ${short}: **${live}**"
+            echo "- URL: ${PAGE_URL:-unknown}"
+            echo "- Checked: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          } > DEPLOY.md
+          git add DEPLOY.md
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Deploy check for ${short}: ${DEPLOY_RESULT}, live: ${live}"
+          git push -q origin status
