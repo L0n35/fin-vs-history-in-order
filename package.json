@@ -1,0 +1,27 @@
+{
+  "name": "fin-vs-history-in-order",
+  "private": true,
+  "type": "module",
+  "description": "An unofficial fan site that lists Fin vs History episodes in the order the history happened.",
+  "scripts": {
+    "dev": "node scripts/fetch-feed.mjs --keep-on-fail && nuxt dev",
+    "build": "node scripts/fetch-feed.mjs && nuxt generate",
+    "generate": "nuxt generate",
+    "preview": "npx serve .output/public",
+    "feed": "node scripts/fetch-feed.mjs",
+    "report": "node scripts/report.mjs",
+    "test": "node --test test/*.test.mjs",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "nuxt": "^4.0.0",
+    "vue": "^3.5.0",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20.19"
+  }
+}
