@@ -20,7 +20,7 @@ type Card = { s: any; eps: any[] }
 const cards = computed<Card[]>(() =>
   props.series
     .filter((s) => props.showBonus || !s.bonus)
-    .map((s) => ({ s, eps: s.eps.filter(matches) }))
+    .map((s) => ({ s, eps: s.eps.filter((e: any) => (props.showBonus || !e.tucked) && matches(e)) }))
     .filter((c) => c.eps.length),
 )
 
@@ -67,7 +67,7 @@ const isEmpty = computed(() => !cards.value.length && !undatedCards.value.length
         <span class="era-years">{{ formatRange([ERAS[sec.era]!.from, ERAS[sec.era]!.to]) }}</span>
       </header>
       <div class="cards">
-        <SeriesCard v-for="c in sec.cards" :key="c.s.id" :series="c.s" :eps="c.eps" :force-open="searching" />
+        <SeriesCard v-for="c in sec.cards" :key="c.s.id" :series="c.s" :eps="c.eps" :force-open="searching" :show-bonus="showBonus" />
       </div>
     </section>
 
@@ -84,6 +84,7 @@ const isEmpty = computed(() => !cards.value.length && !undatedCards.value.length
           :eps="c.eps"
           :title="historyOfTitle(c.s.name)"
           :force-open="searching"
+          :show-bonus="showBonus"
         />
       </div>
     </section>

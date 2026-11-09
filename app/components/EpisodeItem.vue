@@ -7,10 +7,17 @@ const props = defineProps<{
   seriesRange?: [number, number] | null
   /** The card's title; an episode title that just repeats it isn't shown again. */
   seriesName?: string
+  /** Tag it Bonus: a bonus episode listed inside a main series. */
+  bonusTag?: boolean
 }>()
 
 const squash = (s = '') => s.toLowerCase().replace(/^the\s+/, '').replace(/[^a-z0-9]/g, '')
 const showTitle = computed(() => !props.seriesName || squash(props.ep.joke) !== squash(props.seriesName))
+// Don't repeat what the title already says, e.g. "History of The SAS [Part 1]" or "Killer Athletes: Oscar Pistorius".
+const showPart = computed(
+  () => props.ep.p != null && !(showTitle.value && /\bpart\s+(\d|one|two|three|four|five|six)/i.test(props.ep.joke)),
+)
+const showSub = computed(() => !!props.ep.sub && !(showTitle.value && squash(props.ep.joke).includes(squash(props.ep.sub))))
 
 const { isWatched, setWatched } = useWatched()
 const watched = computed(() => isWatched(props.ep.guid))
@@ -45,10 +52,11 @@ function onTick(event: Event) {
       @change="onTick"
     >
     <div class="ep-body">
-      <div v-if="ep.p != null || years || ep.sub || ep.isNew" class="kick">
-        <span v-if="ep.p != null" class="k part">Part {{ ep.p }}</span>
+      <div v-if="bonusTag || showPart || years || showSub || ep.isNew" class="kick">
+        <span v-if="bonusTag" class="tag tag-bonus">Bonus</span>
+        <span v-if="showPart" class="k part">Part {{ ep.p }}</span>
         <span v-if="years" class="k">{{ years }}</span>
-        <span v-if="ep.sub" class="k">{{ ep.sub }}</span>
+        <span v-if="showSub" class="k">{{ ep.sub }}</span>
         <span v-if="ep.isNew" class="tag tag-new">New</span>
       </div>
       <div v-if="showTitle" class="ep-title">{{ ep.joke }}</div>

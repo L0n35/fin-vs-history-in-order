@@ -19,7 +19,7 @@ const lines = [
   '',
   `**${stats.episodes}** episodes in the feed · **${stats.dated}** dated across **${stats.series}** series · **${stats.undated}** not dated yet`,
   '',
-  `**${stats.bonus}** bonus episodes from Spotify in **${stats.bonusSeries}** series · **${stats.undatedBonus}** not dated yet`,
+  `**${stats.bonus}** bonus episodes from Spotify · **${stats.tucked}** filed with their main series · the rest in **${stats.bonusSeries}** bonus series · **${stats.undatedBonus}** not dated yet`,
   '',
   `Links: **${onYouTube}** on YouTube · **${onSpotify}** on Spotify · **${noLink.length}** with neither`,
   '',

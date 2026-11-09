@@ -73,9 +73,10 @@ type Item = {
 
 function itemsFor(theme: boolean): Item[] {
   return props.series
-    .filter((s) => s.range && s.theme === theme && (props.showBonus || !s.bonus) && s.eps.some(matches))
+    .filter((s) => s.range && s.theme === theme && (props.showBonus || !s.bonus) && s.eps.some((e: any) => (props.showBonus || !e.tucked) && matches(e)))
     .map((s) => {
-      const guids = s.eps.map((e: any) => e.guid)
+      // Watched means the series itself, not the bonus episodes filed with it.
+      const guids = s.eps.filter((e: any) => !e.tucked).map((e: any) => e.guid)
       const watched = countWatched(guids) === guids.length
       const name = s.name.replace(/[“”]/g, '')
       return {
@@ -169,7 +170,7 @@ const selectedSeries = computed(() => props.series.find((s) => s.id === selected
     </div>
     <p class="tl-hint">Scroll sideways · tap a bar to open it<template v-if="showBonus"> · dashed bars are bonus</template></p>
     <div class="tl-detail">
-      <SeriesCard v-if="selectedSeries" :key="selectedSeries.id" :series="selectedSeries" force-open />
+      <SeriesCard v-if="selectedSeries" :key="selectedSeries.id" :series="selectedSeries" force-open :show-bonus="showBonus" />
     </div>
   </div>
 </template>

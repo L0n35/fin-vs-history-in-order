@@ -129,6 +129,9 @@ h1 { font-family: var(--f-display); font-variation-settings: "SOFT" 100, "opsz" 
 .series-status.started { color: var(--ink); font-weight: 600; }
 .series.done .series-status { color: var(--good); }
 .status-tick { margin-right: 4px; }
+.status-line .sep { margin: 0 6px; }
+.status-bonus { color: var(--bonus); }
+.status-bonus.started { font-weight: 600; }
 .progress { width: 72px; height: 5px; border-radius: 99px; background: var(--rule); overflow: hidden; }
 .progress > span { display: block; height: 100%; background: var(--good); border-radius: inherit; }
 .chevron { grid-area: chev; position: relative; width: 30px; height: 30px; border: 1.5px solid var(--rule); border-radius: 50%; }
@@ -138,6 +141,9 @@ h1 { font-family: var(--f-display); font-variation-settings: "SOFT" 100, "opsz" 
 
 .series-body { border-top: 1px solid var(--rule); padding: 0 16px 4px; }
 .series-check { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px dashed var(--rule); font-size: 14px; font-weight: 600; cursor: pointer; }
+/* Bonus episodes filed with a main series, listed after its episodes */
+.eps-sub { margin: 0; padding: 14px 0 2px; border-top: 1px dashed var(--bonus-line); font: 600 11px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--bonus); }
+.series-check + .eps-sub, .series-body > .eps-sub:first-child { border-top: 0; }
 
 /* Episodes */
 .eps { list-style: none; margin: 0; padding: 0; }
@@ -149,6 +155,7 @@ h1 { font-family: var(--f-display); font-variation-settings: "SOFT" 100, "opsz" 
 .kick .part { color: var(--ink); font-weight: 600; }
 .kick .tag { margin-left: 8px; }
 .kick .tag:first-child { margin-left: 0; }
+.kick .tag + .k { margin-left: 8px; }
 .ep-title { font-weight: 600; font-size: 15.5px; line-height: 1.35; margin-top: 3px; overflow-wrap: anywhere; }
 .blurb { font-size: 14px; color: var(--muted); font-style: italic; margin: 3px 0 0; }
 .meta { font-size: 13px; color: var(--muted); margin-top: 4px; }

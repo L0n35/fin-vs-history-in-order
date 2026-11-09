@@ -9,7 +9,7 @@ Live at **https://l0n35.github.io/fin-vs-history-in-order/** once GitHub Pages i
 - **The History Of…** section collecting every "The History of …" series (Medicine, The World Cup, …).
 - **Not dated yet** section for new series that haven't been given dates.
 - **YouTube and Spotify links** straight to each episode, wherever it's been found.
-- **Bonus episodes**: the Patreon exclusives that also appear on Spotify, tagged *Bonus* and linked to Spotify and Patreon. They can be hidden with the *Bonus episodes* switch.
+- **Bonus episodes**: the Patreon exclusives that also appear on Spotify, tagged *Bonus* and linked to Spotify and Patreon. Sequels, Film Clubs and same-week tie-ins are listed inside their main series, under *Bonus episodes*, and counted separately from it; the rest get cards of their own. They can all be hidden with the *Bonus episodes* switch.
 - **Watched ticks** on every episode, plus a whole-series tick inside each expanded series. Saved in the browser (localStorage), no sign-in.
 
 Not affiliated with Fin Taylor, Horatio Gould or Podmasters.
@@ -51,7 +51,7 @@ Each run's summary page (Actions → latest run) lists the series that aren't da
 - Use `\b` word boundaries for short names (`/\bSalem\b/`), or they'll match inside other words like "Jerusalem".
 - The first matching series wins, so put more specific rules first.
 
-Bonus episodes have their own list, `BONUS_SERIES`, at the bottom of the same file. Their rules are tested against the whole tidied title (e.g. `Film Club: Zulu vs Zulu Dawn`), and a `null` range files them under *Odds and ends*.
+Bonus episodes have their own list, `BONUS_SERIES`, at the bottom of the same file. Their rules are tested against the whole tidied title (e.g. `Film Club: Zulu vs Zulu Dawn`), and a `null` range files them under *Odds and ends*. Give one a `parent` (a main series id) to list it inside that series' card instead.
 
 Push to `main` and the site rebuilds.
 

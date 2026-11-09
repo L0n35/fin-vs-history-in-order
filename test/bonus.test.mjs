@@ -50,27 +50,59 @@ test('extracts bonus episodes: Patreon titles only, skipping matched ones and re
 
 test('bonus episodes only match bonus series, get tagged, and link to Spotify and Patreon', () => {
   const bonus = extractBonus([
-    sp('g', 'Gaddafi’s Sons | Patreon Exclusive', '2025-06-13'),
-    sp('h', 'Killer Athletes: Oscar Pistorius (with Red Richardson) | Patreon Exclusive', '2026-02-13'),
+    sp('e', 'The Great Emu War of 1932 | Patreon Exclusive', '2025-02-07'),
     sp('i', 'The Charlie Supercut | Patreon Exclusive', '2026-06-15'),
   ])
   const cat = buildCatalogue(bonus, SERIES, '2026-11-10T00:00:00Z', {}, BONUS_SERIES)
-  const byId = Object.fromEntries(cat.series.map((s) => [s.id, s]))
-  // Not filed under the main Gaddafi series
-  assert.equal(byId.gaddafi, undefined)
-  const sons = byId['bonus-gaddafis-sons']
-  assert.equal(sons.bonus, true)
-  assert.equal(sons.eps[0].bonus, true)
-  assert.deepEqual(sons.eps[0].links, { spotify: 'https://open.spotify.com/episode/g', patreon: PATREON_URL })
-  // Per-subject dates
-  const oscar = byId['bonus-killer-athletes'].eps[0]
-  assert.equal(oscar.sub, 'Oscar Pistorius')
-  assert.deepEqual(oscar.range, [2013, 2014])
+  const emu = cat.series.find((s) => s.eps.some((e) => e.guid === 'spotify:e'))
+  assert.equal(emu.bonus, true)
+  assert.equal(emu.eps[0].bonus, true)
+  assert.equal(emu.eps[0].tucked, false)
+  assert.deepEqual(emu.eps[0].links, { spotify: 'https://open.spotify.com/episode/e', patreon: PATREON_URL })
   // No single period: sorted last, no range
   assert.equal(cat.series.at(-1).id, 'bonus-supercuts')
   assert.equal(cat.series.at(-1).range, null)
-  assert.equal(cat.stats.bonus, 3)
+  assert.equal(cat.stats.bonus, 2)
   assert.equal(cat.stats.episodes, 0)
+})
+
+const feedEp = (guid, title, date) => ({ guid, title, date: `${date}T05:00:00.000Z`, duration: 3600, text: '', blurb: '' })
+
+test('bonus episodes with a parent are filed in that series, after its episodes', () => {
+  const main = [
+    feedEp('g2', 'The Mad Dog of the Middle East | The Rise and Fall of Colonel Gaddafi (Part 2)', '2025-06-10'),
+    feedEp('g1', 'Gaddafi Joins the Army | The Rise and Fall of Colonel Gaddafi (Part 1)', '2025-06-03'),
+    feedEp('o1', 'If I Did It | The People vs O.J. Simpson (Part 1)', '2026-02-03'),
+  ]
+  const bonus = extractBonus([
+    sp('g', 'Gaddafi’s Sons | Patreon Exclusive', '2025-06-13'),
+    sp('h', 'Killer Athletes: Oscar Pistorius (with Red Richardson) | Patreon Exclusive', '2026-02-13'),
+  ])
+  const cat = buildCatalogue([...bonus, ...main], SERIES, '2026-11-10T00:00:00Z', {}, BONUS_SERIES)
+  const byId = Object.fromEntries(cat.series.map((s) => [s.id, s]))
+  assert.equal(byId['bonus-gaddafis-sons'], undefined)
+  const gaddafi = byId.gaddafi
+  assert.equal(gaddafi.bonus, false)
+  assert.deepEqual(gaddafi.eps.map((e) => e.guid), ['g1', 'g2', 'spotify:g'])
+  const sons = gaddafi.eps[2]
+  assert.equal(sons.bonus, true)
+  assert.equal(sons.tucked, true)
+  assert.equal(sons.series.id, 'gaddafi')
+  assert.deepEqual(sons.links, { spotify: 'https://open.spotify.com/episode/g', patreon: PATREON_URL })
+  // Keeps its own per-subject dates inside the parent card
+  const oscar = byId['oj-simpson'].eps.at(-1)
+  assert.equal(oscar.sub, 'Oscar Pistorius')
+  assert.deepEqual(oscar.range, [2013, 2014])
+  assert.equal(cat.stats.tucked, 2)
+  assert.equal(cat.stats.bonusSeries, 0)
+})
+
+test('a parent with no episodes of its own yet shows its bonus episodes as a bonus card', () => {
+  const cat = buildCatalogue(extractBonus([sp('g', 'Gaddafi’s Sons | Patreon Exclusive', '2025-06-13')]), SERIES, '2026-11-10T00:00:00Z', {}, BONUS_SERIES)
+  assert.equal(cat.series.length, 1)
+  assert.equal(cat.series[0].id, 'gaddafi')
+  assert.equal(cat.series[0].bonus, true)
+  assert.equal(cat.series[0].eps[0].tucked, false)
 })
 
 test('every bonus series rule is well formed', () => {
@@ -80,5 +112,6 @@ test('every bonus series rule is well formed', () => {
     ids.add(s.id)
     assert.ok(s.title instanceof RegExp && !s.title.global, `${s.id} needs a title rule without the g flag`)
     if (s.range) assert.ok(s.range[0] <= s.range[1], `${s.id} range runs backwards`)
+    if (s.parent) assert.ok(SERIES.some((m) => m.id === s.parent), `${s.id} has an unknown parent ${s.parent}`)
   }
 })
