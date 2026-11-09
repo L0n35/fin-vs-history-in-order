@@ -101,7 +101,7 @@ test('matches episodes to series, parts and date ranges', () => {
 test('series are sorted by when they start', () => {
   const cat = buildCatalogue(episodes, SERIES)
   const ids = cat.series.map((s) => s.id)
-  assert.deepEqual(ids, ['agincourt', 'renaissance', 'great-northern-war', 'napoleonic-wars', 'stalin', 'dingo'])
+  assert.deepEqual(ids, ['renaissance', 'agincourt', 'great-northern-war', 'napoleonic-wars', 'stalin', 'dingo'])
 })
 
 test('unknown series land in "Not dated yet", grouped by their title', () => {
@@ -126,7 +126,10 @@ test('formats years and eras', () => {
   assert.equal(formatRange([41, 54]), 'AD 41–54')
   assert.equal(formatRange([1805, 1805]), '1805')
   assert.equal(formatRange([1780, PRESENT]), '1780–present')
-  assert.equal(ERAS[eraIndex([1491, 1547])].name, 'Early modern')
+  assert.equal(ERAS[eraIndex([1509, 1547])].name, 'Early modern')
+  assert.equal(ERAS[eraIndex([1483, 1485])].name, 'Medieval')
+  assert.equal(ERAS[eraIndex([1796, 1815])].name, 'Modern')
+  assert.equal(ERAS[eraIndex([1940, 1944])].name, 'Modern')
   assert.equal(ERAS[eraIndex([1776, 1920])].name, 'Early modern')
   assert.equal(ERAS[eraIndex([1980, 1982])].name, 'Post-war')
 })
