@@ -155,7 +155,13 @@ async function spotifyEpisodes(clientId, clientSecret) {
     }
     for (const e of page.items || []) {
       if (e?.external_urls?.spotify) {
-        episodes.push({ url: e.external_urls.spotify, title: e.name, text: (e.description || '').slice(0, 600), date: e.release_date })
+        episodes.push({
+          url: e.external_urls.spotify,
+          title: e.name,
+          text: (e.description || '').slice(0, 600),
+          date: e.release_date,
+          duration: e.duration_ms ? Math.round(e.duration_ms / 1000) : null,
+        })
       }
     }
     if (!page.next) break
@@ -166,6 +172,8 @@ async function spotifyEpisodes(clientId, clientSecret) {
 const episodes = JSON.parse(await readFile(new URL('episodes.json', DATA_DIR), 'utf8').catch(() => '[]'))
 const links = {}
 
+const unmatched = {}
+
 async function collect(name, key, configured, load) {
   if (!configured) {
     console.warn(`${name} links skipped: credentials aren’t set.`)
@@ -175,6 +183,8 @@ async function collect(name, key, configured, load) {
     const candidates = await load()
     const matched = matchLinks(episodes, candidates)
     for (const [guid, url] of matched) (links[guid] ||= {})[key] = url
+    const used = new Set(matched.values())
+    unmatched[key] = candidates.filter((c) => !used.has(c.url)).map(({ text, ...rest }) => ({ ...rest, text: text?.slice(0, 200) }))
     console.log(`${name}: found ${candidates.length} episodes, matched ${matched.size} of ${episodes.length}.`)
   } catch (err) {
     console.warn(`${name} links skipped: ${err instanceof Error ? err.message : err}`)
@@ -187,3 +197,5 @@ await collect('Spotify', 'spotify', !!(SPOTIFY_CLIENT_ID && SPOTIFY_CLIENT_SECRE
 
 await mkdir(DATA_DIR, { recursive: true })
 await writeFile(new URL('links.json', DATA_DIR), JSON.stringify(links, null, 2) + '\n')
+// Platform episodes that didn't match anything in the feed, for checking the matching and spotting gaps.
+await writeFile(new URL('unmatched.json', DATA_DIR), JSON.stringify(unmatched, null, 2) + '\n')

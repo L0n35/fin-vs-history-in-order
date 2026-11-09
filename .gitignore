@@ -13,3 +13,4 @@ dist
 # Downloaded from the RSS feed on every build
 data/episodes.json
 data/links.json
+data/unmatched.json

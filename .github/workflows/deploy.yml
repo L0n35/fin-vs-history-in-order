@@ -91,9 +91,10 @@ jobs:
             tail -n 60 build.log 2>/dev/null || echo "(the build didn't run)"
             echo '```'
           } > "$dir/REPORT.md"
+          mkdir -p "$dir/data" && cp data/*.json "$dir/data/" 2>/dev/null || true
           cd "$dir"
           git init -q -b status
-          git add REPORT.md
+          git add -A
           git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
             commit -q -m "Build report for run ${{ github.run_id }} (${GITHUB_SHA::7})"
           git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" status
