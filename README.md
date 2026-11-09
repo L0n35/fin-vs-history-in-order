@@ -8,6 +8,7 @@ Live at **https://l0n35.github.io/fin-vs-history-in-order/** once GitHub Pages i
 - **Timeline** view where overlapping series stack into rows, on an axis that gives recent centuries more room than prehistory.
 - **Across the ages** section for series like The History of Medicine that sweep through thousands of years.
 - **Not dated yet** section for new series that haven't been given dates.
+- **YouTube and Spotify links** straight to each episode, wherever it's been found.
 
 Not affiliated with Fin Taylor, Horatio Gould or Podmasters.
 
@@ -23,7 +24,8 @@ RSS feed ──► scripts/fetch-feed.mjs ──► data/episodes.json ─┐
 2. It downloads the podcast's RSS feed into `data/episodes.json`.
 3. Each episode is matched to a series in `lib/series.mjs` by its title, e.g. `… | Stalin: Barbarossa (Part 4)`. The part number comes from the title, or from the description when the title doesn't have one.
 4. The series (or the specific part) supplies the historical date range. Anything that doesn't match goes in **Not dated yet**.
-5. Nuxt generates a static site and the Action deploys it to GitHub Pages.
+5. `scripts/fetch-links.mjs` lists the channel's YouTube uploads and the show's Spotify episodes, and matches them to the feed by title, then by series and part, then by description, and finally by release date when only one candidate is within a day. Results go to `data/links.json`.
+6. Nuxt generates a static site and the Action deploys it to GitHub Pages.
 
 New parts of a series you've already dated slot in by themselves. A brand new series is the only thing that needs you.
 
@@ -54,13 +56,27 @@ Push to `main` and the site rebuilds.
 
 The first run deploys to `https://<user>.github.io/<repo>/`. GitHub pauses scheduled workflows after 60 days without any commits, so push something occasionally or re-enable it from the Actions tab.
 
+### YouTube and Spotify links
+
+Episode links need API credentials, saved as repository secrets under **Settings → Secrets and variables → Actions**. Without them the site still builds, just without those links.
+
+| Secret | Where to get it |
+| --- | --- |
+| `YOUTUBE_API_KEY` | [Google Cloud console](https://console.cloud.google.com/apis/library/youtube.googleapis.com): create a project, enable **YouTube Data API v3**, then **Credentials → Create credentials → API key**. Restrict it to the YouTube Data API. A daily run uses well under 100 of the 10,000 free quota units. |
+| `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` | [Spotify developer dashboard](https://developer.spotify.com/dashboard): create an app with the **Web API** ticked. It asks for a redirect URI; `http://127.0.0.1:3000/callback` is fine since it's never used. Spotify requires the app owner to have Premium for development-mode apps. |
+
+The first Spotify run logs the show's ID. Saving it as a repository **variable** called `SPOTIFY_SHOW_ID` skips the search on later runs.
+
+Each run's summary shows how many episodes got each link and lists the ones that got neither.
+
 ## Local development
 
 Needs Node 20.19 or newer.
 
 ```sh
 npm install
-npm run dev        # downloads the feed, then starts Nuxt at http://localhost:3000
+cp .env.example .env   # optional: add API keys for YouTube/Spotify links
+npm run dev        # downloads the feed and links, then starts Nuxt at http://localhost:3000
 npm test           # tests for the feed parser and series matching
 npm run report     # what's dated and what isn't
 npm run build      # fetch + static build into .output/public
@@ -75,7 +91,8 @@ After your first `npm install`, commit the generated `package-lock.json` so CI i
 | `lib/series.mjs` | The series-to-dates mapping. The only file you edit routinely. |
 | `lib/catalogue.mjs` | Matches episodes to series, parses part numbers, groups undated episodes. |
 | `lib/feed.mjs` | Dependency-free RSS parser. |
+| `lib/links.mjs` | Matches feed episodes to YouTube videos and Spotify episodes. |
 | `lib/format.mjs` | Eras, BC/AD year formatting, sorting helpers. |
-| `scripts/` | Feed download and the undated report used by CI. |
+| `scripts/` | Feed download, link matching and the run report used by CI. |
 | `app/` | The Nuxt app: `ListView`, `TimelineView`, `SeriesCard`, `EpisodeItem`. |
 | `test/` | `node --test` suite with real feed items as fixtures. |

@@ -17,6 +17,8 @@
   --focus: #1B2140;
   --chip: #E7E5DA;
   --hl: rgba(226, 165, 42, 0.16);
+  --youtube: #E1251B;
+  --spotify: #1AA34A;
   --f-display: "Fraunces", "Cooper Black", Georgia, serif;
   --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -40,6 +42,8 @@
     --focus: #E9B444;
     --chip: #252B48;
     --hl: rgba(233, 180, 68, 0.12);
+    --youtube: #FF4E45;
+    --spotify: #1ED760;
     color-scheme: dark;
   }
 }
@@ -103,6 +107,12 @@ h1 { font-family: var(--f-display); font-variation-settings: "SOFT" 100, "opsz" 
 .blurb { font-size: 14px; color: var(--muted); font-style: italic; margin: 3px 0 0; }
 .meta { font-size: 13px; color: var(--muted); margin-top: 3px; }
 .meta .sep { margin: 0 6px; }
+.listen { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.listen-link { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 600; text-decoration: none; color: var(--ink); border: 1.5px solid var(--rule); border-radius: 999px; padding: 4px 11px; }
+.listen-link::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--dot); }
+.listen-link.youtube { --dot: var(--youtube); }
+.listen-link.spotify { --dot: var(--spotify); }
+.listen-link:hover { border-color: var(--ink); }
 .empty { padding: 40px 0; color: var(--muted); }
 
 @media (max-width: 520px) {

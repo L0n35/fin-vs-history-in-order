@@ -36,7 +36,15 @@ jobs:
       - name: Fetch the latest episodes
         run: npm run feed
 
-      - name: Report undated episodes
+      - name: Find YouTube and Spotify links
+        run: npm run links
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+          SPOTIFY_SHOW_ID: ${{ vars.SPOTIFY_SHOW_ID }}
+
+      - name: Report undated episodes and missing links
         run: npm run report >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build the site

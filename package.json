@@ -4,11 +4,12 @@
   "type": "module",
   "description": "An unofficial fan site that lists Fin vs History episodes in the order the history happened.",
   "scripts": {
-    "dev": "node scripts/fetch-feed.mjs --keep-on-fail && nuxt dev",
-    "build": "node scripts/fetch-feed.mjs && nuxt generate",
+    "dev": "node scripts/fetch-feed.mjs --keep-on-fail && node scripts/fetch-links.mjs && nuxt dev",
+    "build": "node scripts/fetch-feed.mjs && node scripts/fetch-links.mjs && nuxt generate",
     "generate": "nuxt generate",
     "preview": "npx serve .output/public",
     "feed": "node scripts/fetch-feed.mjs",
+    "links": "node scripts/fetch-links.mjs",
     "report": "node scripts/report.mjs",
     "test": "node --test test/*.test.mjs",
     "postinstall": "nuxt prepare"

@@ -14,8 +14,11 @@ const partLabel = computed(() => {
   return `Part ${p}${of ? ` of ${of}` : ''}`
 })
 const minutes = computed(() => (props.ep.duration ? Math.round(props.ep.duration / 60) : null))
-const youtube = computed(
-  () => 'https://www.youtube.com/@FinvsHistory/search?query=' + encodeURIComponent(props.ep.title.replace(/[“”"]/g, '')),
+const platforms = computed(() =>
+  [
+    { key: 'youtube', label: 'YouTube', verb: 'Watch', url: props.ep.links?.youtube },
+    { key: 'spotify', label: 'Spotify', verb: 'Listen', url: props.ep.links?.spotify },
+  ].filter((p) => p.url),
 )
 </script>
 
@@ -37,8 +40,18 @@ const youtube = computed(
           <span class="sep" aria-hidden="true">·</span>
           <span>{{ minutes }} min</span>
         </template>
-        <span class="sep" aria-hidden="true">·</span>
-        <a :href="youtube" target="_blank" rel="noopener noreferrer">Find on YouTube ↗</a>
+      </div>
+      <div v-if="platforms.length" class="listen">
+        <a
+          v-for="pl in platforms"
+          :key="pl.key"
+          class="listen-link"
+          :class="pl.key"
+          :href="pl.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          :aria-label="`${pl.verb} “${ep.joke}” on ${pl.label}`"
+        >{{ pl.label }} <span aria-hidden="true">↗</span></a>
       </div>
     </div>
   </li>

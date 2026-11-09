@@ -4,15 +4,34 @@ import { readFile } from 'node:fs/promises'
 import { buildCatalogue } from '../lib/catalogue.mjs'
 import { SERIES } from '../lib/series.mjs'
 
-const raw = await readFile(new URL('../data/episodes.json', import.meta.url), 'utf8').catch(() => '[]')
-const { stats, undated } = buildCatalogue(JSON.parse(raw), SERIES)
+const read = (name, fallback) => readFile(new URL(`../data/${name}`, import.meta.url), 'utf8').then(JSON.parse, () => fallback)
+const episodes = await read('episodes.json', [])
+const links = await read('links.json', {})
+const { stats, undated } = buildCatalogue(episodes, SERIES, Date.now(), links)
+
+const onYouTube = episodes.filter((e) => links[e.guid]?.youtube).length
+const onSpotify = episodes.filter((e) => links[e.guid]?.spotify).length
+const noLink = episodes.filter((e) => !links[e.guid]?.youtube && !links[e.guid]?.spotify)
 
 const lines = [
   '## Fin vs History, in order',
   '',
   `**${stats.episodes}** episodes in the feed · **${stats.dated}** dated across **${stats.series}** series · **${stats.undated}** not dated yet`,
   '',
+  `Links: **${onYouTube}** on YouTube · **${onSpotify}** on Spotify · **${noLink.length}** with neither`,
+  '',
 ]
+
+if (noLink.length && noLink.length < episodes.length) {
+  lines.push(
+    '<details><summary>Episodes with no YouTube or Spotify link</summary>',
+    '',
+    ...noLink.slice(0, 40).map((e) => `- ${e.title} (${e.date.slice(0, 10)})`),
+    '',
+    '</details>',
+    '',
+  )
+}
 
 if (undated.length) {
   lines.push(
