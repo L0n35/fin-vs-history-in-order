@@ -28,10 +28,10 @@ jobs:
           node-version: 22
 
       - name: Install
-        run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
+        run: (if [ -f package-lock.json ]; then npm ci; else npm install; fi) 2>&1 | tee install.log
 
       - name: Test the data pipeline
-        run: npm test
+        run: npm test 2>&1 | tee test.log
 
       - name: Fetch the latest episodes
         run: npm run --silent feed 2>&1 | tee -a run.log
@@ -83,6 +83,14 @@ jobs:
             echo
             echo '```'
             cat run.log 2>/dev/null || echo "(empty)"
+            echo '```'
+            echo
+            echo "## Install and tests (last 40 lines each)"
+            echo
+            echo '```'
+            tail -n 40 install.log 2>/dev/null || echo "(install didn't run)"
+            echo '---'
+            grep -E '^(not ok|# (pass|fail))|Error|expected|actual' test.log 2>/dev/null | head -40 || echo "(tests didn't run)"
             echo '```'
             echo
             echo "## End of the build log"
